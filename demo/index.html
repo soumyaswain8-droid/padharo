@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<title>Padharo — society in your pocket</title>
+<!--
+  Padharo — पधारो ("please, come in")
+  Single-file pitch prototype for small apartment societies. No server, no network, no real users.
+  One in-memory `state` object is the source of truth; all three personas read/write it (live-linking).
+  Dynamic content is escaped via esc() before rendering, so user-typed text is never interpreted as HTML.
+-->
+<style>
+  /* ===== Padharo · Aurora Glass theme ===== */
+  :root{
+    --ink:#f4f1ff; --muted:rgba(238,234,255,.62); --faint:rgba(238,234,255,.42);
+    --accent:#ff8a4c; --accent-d:#ff7a36; --accent-2:#46e0d0;
+    --accent-soft:rgba(255,138,76,.16); --cyan-soft:rgba(70,224,208,.16);
+    --ok:#34e0a1; --ok-soft:rgba(52,224,161,.15);
+    --warn:#ffc24b; --warn-soft:rgba(255,194,75,.15);
+    --bad:#ff6b6b; --bad-soft:rgba(255,107,107,.15);
+    --glass:rgba(255,255,255,.06); --glass-2:rgba(255,255,255,.09);
+    --brd:rgba(255,255,255,.14); --brd-soft:rgba(255,255,255,.09);
+    --radius:18px;
+    --glow-a:0 8px 30px rgba(0,0,0,.38); --ring:inset 0 1px 0 rgba(255,255,255,.14);
+  }
+  *{box-sizing:border-box;font-family:'Inter',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+  body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:22px 14px;
+       color:var(--ink);background:#07060f;
+       background-image:radial-gradient(900px 600px at 15% -5%,rgba(255,138,76,.20),transparent 60%),
+         radial-gradient(800px 700px at 110% 10%,rgba(120,80,255,.22),transparent 60%),
+         radial-gradient(700px 700px at 50% 120%,rgba(70,224,208,.14),transparent 60%),
+         linear-gradient(160deg,#0a0816,#0e0a1f 60%,#120c26)}
+  .brand{display:flex;align-items:center;gap:9px;margin-bottom:15px;color:rgba(255,255,255,.9)}
+  .brand .logo{width:32px;height:32px;border-radius:10px;color:#fff;font-weight:800;font-size:18px;
+       display:flex;align-items:center;justify-content:center;
+       background:linear-gradient(135deg,var(--accent),#ff6a8c);
+       box-shadow:0 6px 22px rgba(255,138,76,.6),var(--ring)}
+  .brand b{font-size:18px;letter-spacing:.2px}
+  .brand span{font-size:12.5px;color:var(--muted)}
+
+  .phone{width:392px;max-width:96vw;height:812px;max-height:88vh;position:relative;
+       border-radius:42px;overflow:hidden;display:flex;flex-direction:column;
+       background:linear-gradient(165deg,#15102e,#1b1440 55%,#221651);
+       box-shadow:0 40px 90px rgba(80,40,160,.45),0 0 0 10px #07060f,0 0 0 12px rgba(255,255,255,.08),
+         0 0 60px rgba(120,80,255,.25)}
+  .notch{height:26px;background:rgba(0,0,0,.35);flex:none;position:relative;z-index:3}
+  /* aurora backdrop inside the phone (persists behind the re-rendered screen) */
+  .aurora{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .aurora span{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;mix-blend-mode:screen;
+       animation:auroraDrift 20s ease-in-out infinite}
+  .aurora span:nth-child(1){width:300px;height:300px;background:#ff8a4c;top:-60px;left:-50px}
+  .aurora span:nth-child(2){width:280px;height:280px;background:#7a4bff;bottom:60px;right:-70px;animation-delay:-6s}
+  .aurora span:nth-child(3){width:240px;height:240px;background:#46e0d0;top:42%;left:30%;animation-delay:-12s;opacity:.4}
+  @keyframes auroraDrift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(28px,34px) scale(1.15)}}
+
+  .switcher{display:flex;gap:6px;padding:11px 10px 9px;flex:none;align-items:center;position:relative;z-index:3;
+       background:rgba(12,9,28,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+       border-bottom:1px solid var(--brd-soft)}
+  .switcher button{flex:1;border:1px solid var(--brd-soft);background:var(--glass);color:rgba(255,255,255,.72);
+       padding:10px 4px;border-radius:13px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.2s;
+       display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1}
+  .switcher button .ic{font-size:17px}
+  .switcher button.active{color:#fff;border-color:transparent;
+       background:linear-gradient(135deg,var(--accent),#ff6a8c);
+       box-shadow:0 6px 18px rgba(255,138,76,.5),var(--ring)}
+  .switcher .help{flex:none;width:36px;align-self:stretch;color:var(--accent-2);font-size:15px;border-radius:13px;
+       background:var(--cyan-soft);border:1px solid rgba(70,224,208,.3)}
+
+  .screen{flex:1;overflow-y:auto;padding:6px 0 26px;position:relative;z-index:2}
+  .screen::-webkit-scrollbar{width:0}
+
+  .card{background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+       border:1px solid var(--brd);border-radius:var(--radius);padding:15px;margin:11px 12px;
+       box-shadow:var(--glow-a),var(--ring)}
+  .card.tight{padding:13px 15px}
+  .hdr{border-radius:var(--radius);margin:11px 12px;padding:17px;color:#fff;position:relative;overflow:hidden;
+       background:linear-gradient(135deg,rgba(255,138,76,.92),rgba(168,90,255,.82));
+       border:1px solid rgba(255,255,255,.18);
+       box-shadow:0 12px 34px rgba(168,90,255,.4),var(--ring)}
+  .hdr h2{margin:0 0 3px;font-size:19px}
+  .hdr .sub{font-size:12.5px;opacity:.95}
+  .hdr .flat{display:inline-block;margin-top:10px;background:rgba(255,255,255,.22);padding:3px 12px;
+       border-radius:20px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.25)}
+  .sec-t{font-size:11px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--faint);
+       margin:18px 22px 4px;display:flex;justify-content:space-between;align-items:center}
+  .sec-t a{color:var(--accent-2);text-decoration:none;font-size:11.5px;font-weight:700;cursor:pointer}
+
+  .row{display:flex;align-items:center;gap:11px}
+  .avatar{width:43px;height:43px;border-radius:13px;flex:none;display:flex;align-items:center;justify-content:center;
+       color:#fff;font-weight:700;font-size:16px;box-shadow:0 6px 16px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.3)}
+  .grow{flex:1;min-width:0}
+  .nm{font-weight:700;font-size:14.5px;color:#fff}
+  .meta{font-size:12.5px;color:var(--muted);margin-top:1px}
+  .muted{color:var(--muted)}
+
+  .pill{display:inline-block;padding:4px 11px;border-radius:20px;font-size:11.5px;font-weight:700;
+       border:1px solid transparent;backdrop-filter:blur(6px)}
+  .pill.ok{background:var(--ok-soft);color:var(--ok);border-color:rgba(52,224,161,.35);box-shadow:0 0 14px rgba(52,224,161,.25)}
+  .pill.warn{background:var(--warn-soft);color:var(--warn);border-color:rgba(255,194,75,.35)}
+  .pill.bad{background:var(--bad-soft);color:var(--bad);border-color:rgba(255,107,107,.35)}
+  .pill.grey{background:var(--glass-2);color:rgba(255,255,255,.66);border-color:var(--brd-soft)}
+
+  .btns{display:flex;gap:9px;margin-top:13px}
+  button.act{flex:1;border:1px solid transparent;border-radius:13px;padding:12px;font-size:13.5px;font-weight:700;
+       cursor:pointer;transition:.18s;color:#fff}
+  button.act:active{transform:scale(.97)}
+  .approve{background:linear-gradient(135deg,#2fd996,#19b87c);box-shadow:0 6px 18px rgba(52,224,161,.4)}
+  .deny{background:var(--bad-soft);color:#ff9a9a;border-color:rgba(255,107,107,.3)}
+  .ghost{background:var(--glass-2);color:rgba(255,255,255,.8);border-color:var(--brd-soft)}
+  .primary{background:linear-gradient(135deg,var(--accent),#ff6a8c);box-shadow:0 6px 18px rgba(255,138,76,.45)}
+  .primary:hover{filter:brightness(1.06)}
+
+  .empty{text-align:center;color:var(--muted);font-size:13.5px;padding:18px 10px}
+  .empty .big{font-size:30px;display:block;margin-bottom:6px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.4))}
+
+  .bigbtn{display:flex;align-items:center;gap:13px;width:100%;cursor:pointer;text-align:left;
+       border:1px solid var(--brd);border-radius:var(--radius);padding:17px 16px;margin:11px 12px;
+       background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+       box-shadow:var(--glow-a),var(--ring);transition:.18s}
+  .bigbtn:hover{background:var(--glass-2);transform:translateY(-1px)}
+  .bigbtn .ic{width:48px;height:48px;border-radius:14px;color:#fff;display:flex;align-items:center;
+       justify-content:center;font-size:22px;flex:none;
+       background:linear-gradient(135deg,rgba(255,138,76,.9),rgba(168,90,255,.7));
+       box-shadow:0 6px 16px rgba(168,90,255,.4)}
+  .bigbtn .t{font-weight:800;font-size:15.5px;color:#fff} .bigbtn .s{font-size:12.5px;color:var(--muted)}
+  .bigbtn .chev{color:var(--faint);font-size:22px}
+
+  .billamt{font-size:31px;font-weight:800;letter-spacing:-.5px;color:#fff;
+       text-shadow:0 0 22px rgba(255,138,76,.4)}
+  .barwrap{height:10px;background:rgba(255,255,255,.1);border-radius:10px;overflow:hidden;margin:10px 0 4px}
+  .bar{height:100%;border-radius:10px;transition:.5s;
+       background:linear-gradient(90deg,var(--accent),var(--accent-2));box-shadow:0 0 16px rgba(70,224,208,.5)}
+  .stat{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+  .stat b{color:#fff}
+
+  .divline{height:1px;background:var(--brd-soft);margin:12px 0}
+
+  #modal:empty{display:none}
+  .overlay{position:absolute;inset:0;background:rgba(6,4,16,.62);backdrop-filter:blur(4px);
+       display:flex;flex-direction:column;justify-content:flex-end;z-index:50;animation:fade .18s ease}
+  .sheet{border-radius:24px 24px 0 0;padding:22px 18px 26px;animation:rise .28s cubic-bezier(.2,.8,.25,1);
+       background:linear-gradient(165deg,rgba(34,26,68,.92),rgba(22,16,46,.96));
+       backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);
+       border-top:1px solid var(--brd);box-shadow:0 -20px 60px rgba(0,0,0,.5)}
+  .sheet h3{margin:0 0 14px;font-size:18px;color:#fff}
+  .sheet label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin:12px 0 5px;
+       letter-spacing:.03em}
+  .sheet input,.sheet select,.sheet textarea{width:100%;border:1px solid var(--brd);border-radius:13px;
+       padding:12px;font-size:15px;background:rgba(255,255,255,.06);color:#fff;outline:none;transition:.18s}
+  .sheet input::placeholder,.sheet textarea::placeholder{color:var(--faint)}
+  .sheet input:focus,.sheet select:focus,.sheet textarea:focus{border-color:var(--accent-2);
+       box-shadow:0 0 0 3px rgba(70,224,208,.18)}
+  .sheet select{appearance:none}
+  .sheet select option{color:#1a1530}
+  .sheet textarea{min-height:64px;resize:none}
+  .sheet .primary,.sheet .ghost{width:100%;border:0;border-radius:14px;padding:14px;font-size:14.5px;
+       font-weight:700;cursor:pointer;margin-top:16px;color:#fff}
+  .bigcode{font-size:44px;font-weight:800;letter-spacing:12px;color:#fff;text-align:center;
+       background:linear-gradient(135deg,var(--accent-soft),var(--cyan-soft));border:1px solid var(--brd);
+       border-radius:16px;padding:20px;margin:14px 0 4px;text-shadow:0 0 26px rgba(255,138,76,.6)}
+  .tick{width:66px;height:66px;border-radius:50%;color:#fff;font-size:34px;font-weight:800;
+       display:flex;align-items:center;justify-content:center;margin:6px auto 14px;
+       background:linear-gradient(135deg,#2fd996,#19b87c);box-shadow:0 0 30px rgba(52,224,161,.55)}
+  .scriptlist{margin:0;padding-left:20px;font-size:14px;line-height:1.75;color:rgba(255,255,255,.9)}
+  .scriptlist li{margin-bottom:5px}
+  .scriptlist b{color:var(--accent-2)}
+  @keyframes rise{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .foot{text-align:center;font-size:11px;color:var(--faint);margin-top:15px}
+</style>
+</head>
+<body>
+  <div class="brand">
+    <div class="logo">प</div>
+    <div><b>Padharo</b> &nbsp;<span>society in your pocket</span></div>
+  </div>
+
+  <div class="phone">
+    <div class="aurora"><span></span><span></span><span></span></div>
+    <div class="notch"></div>
+    <div class="switcher">
+      <button data-p="resident"  onclick="setPersona('resident')"><span class="ic">🏠</span>Resident</button>
+      <button data-p="guard"     onclick="setPersona('guard')"><span class="ic">🛡️</span>Guard</button>
+      <button data-p="committee" onclick="setPersona('committee')"><span class="ic">📋</span>Committee</button>
+      <button class="help" onclick="showScript()" title="How to demo">?</button>
+    </div>
+    <div id="screen" class="screen"></div>
+    <div id="modal"></div>
+  </div>
+  <div class="foot">Prototype • mock data • no real accounts or payments</div>
+
+<script>
+/* ============================== STATE / SEED DATA ============================== */
+const state = {
+  persona: 'resident',
+  me: 'A-302',
+  society: { name:'Green Meadows', flats:48, month:'May 2026' },
+  guardName: 'Lakshman',
+  residents: [
+    { flat:'A-302', name:'Soumya Swain', phone:'98xxxxxx01' },
+    { flat:'A-101', name:'Rao Family',   phone:'98xxxxxx02' },
+    { flat:'B-204', name:'Mehta Family', phone:'98xxxxxx03' },
+  ],
+  visitors: [
+    { id:1, name:'Ramesh (Plumber)', flat:'A-302', purpose:'Service', status:'pending',  time:'10:42 AM', tone:'#6c8cd5' },
+    { id:2, name:'Anjali (Guest)',   flat:'A-101', purpose:'Guest',   status:'approved', time:'09:15 AM', tone:'#cf6f9b' },
+  ],
+  deliveries: [ { id:1, type:'delivery', vendor:'Amazon', flat:'A-302', code:'4821', status:'expected' } ],
+  bills: [
+    { flat:'A-302', amount:2400, status:'due'  },
+    { flat:'A-101', amount:2400, status:'paid' },
+    { flat:'B-204', amount:2400, status:'paid' },
+  ],
+  notices: [
+    { id:1, title:'Water tanker cleaning', body:'Water supply off Sat 8–11 AM for tank cleaning.', date:'22 May' },
+    { id:2, title:'AGM this Sunday',        body:'Annual meeting 6 PM at the clubhouse. Please attend.', date:'20 May' },
+  ],
+  complaints: [ { id:1, flat:'A-302', title:'Lift B making noise', status:'open', date:'21 May' } ],
+  seq: 100,
+};
+const nextId   = () => ++state.seq;
+const myBill   = () => state.bills.find(b => b.flat === state.me);
+const myName   = () => (state.residents.find(r => r.flat === state.me)||{}).name || 'Resident';
+const fmt      = n  => '₹' + n.toLocaleString('en-IN');
+const esc      = s  => String(s).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+const nowTime  = () => new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}).toUpperCase().replace(/\s+/g,' ');
+const nowDate  = () => new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+const initials = s  => s.replace(/[^A-Za-z ]/g,'').trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
+
+/* ============================== RENDER: shared ============================== */
+const screenEl = () => document.getElementById('screen');
+function setPersona(p){ state.persona = p; render(); }
+function render(){
+  document.querySelectorAll('.switcher button[data-p]').forEach(b =>
+    b.classList.toggle('active', b.dataset.p === state.persona));
+  const views = { resident: renderResident, guard: renderGuard, committee: renderCommittee };
+  screenEl().innerHTML = views[state.persona]();
+}
+
+/* ============================== MODALS ============================== */
+function openModal(html){
+  document.getElementById('modal').innerHTML =
+    '<div class="overlay" onclick="closeModal()"><div class="sheet" onclick="event.stopPropagation()">'+html+'</div></div>';
+}
+function closeModal(){ document.getElementById('modal').innerHTML = ''; }
+
+/* ============================== ACTIONS ============================== */
+function decideVisitor(id, decision){
+  const v = state.visitors.find(x => x.id === id); if (v) v.status = decision; render();
+}
+function showAddVisitor(){
+  const opts = state.residents.map(r => '<option value="'+r.flat+'">'+r.flat+' — '+esc(r.name)+'</option>').join('');
+  openModal('<h3>New visitor at gate</h3>'
+    + '<label>Visitor name</label><input id="vn" placeholder="e.g. Ramesh"/>'
+    + '<label>Visiting flat</label><select id="vf">'+opts+'</select>'
+    + '<label>Purpose</label><input id="vp" placeholder="e.g. Delivery, Guest"/>'
+    + '<button class="primary" onclick="addVisitor()">Notify resident</button>'
+    + '<button class="ghost" onclick="closeModal()">Cancel</button>');
+}
+function addVisitor(){
+  const name = document.getElementById('vn').value.trim() || 'Visitor';
+  const flat = document.getElementById('vf').value;
+  const purpose = document.getElementById('vp').value.trim() || 'Visit';
+  const tones = ['#6c8cd5','#cf6f9b','#5aa6a0','#d59a5a','#8c7bd6'];
+  state.visitors.push({ id:nextId(), name, flat, purpose, status:'pending',
+    time:nowTime(), tone:tones[Math.floor(Math.random()*tones.length)] });
+  closeModal(); render();
+}
+function showPreApprove(){
+  openModal('<h3>Pre-approve an arrival</h3>'
+    + '<label>Type</label>'
+    + '<select id="dt"><option value="delivery">Delivery</option><option value="cab">Cab</option></select>'
+    + '<label>Who is coming?</label><input id="dv" placeholder="e.g. Amazon, Uber"/>'
+    + '<button class="primary" onclick="preApprove()">Get gate code</button>'
+    + '<button class="ghost" onclick="closeModal()">Cancel</button>');
+}
+function preApprove(){
+  const type = document.getElementById('dt').value;
+  const vendor = document.getElementById('dv').value.trim() || (type==='cab' ? 'Cab' : 'Delivery');
+  const code = String(1000 + Math.floor(Math.random()*9000));
+  state.deliveries.push({ id:nextId(), type, vendor, flat:state.me, code, status:'expected' });
+  render();
+  openModal('<h3>Gate code ready</h3><p class="muted" style="margin:0">Share this with '+esc(vendor)+' — the guard will let them in.</p>'
+    + '<div class="bigcode">'+code+'</div>'
+    + '<button class="primary" onclick="closeModal()">Done</button>');
+}
+function markArrived(id){ const d = state.deliveries.find(x=>x.id===id); if(d) d.status='arrived'; render(); }
+function showPay(){
+  const b = myBill();
+  openModal('<h3>Pay maintenance</h3>'
+    + '<p class="muted" style="margin:0 0 6px">'+state.society.name+' • '+state.society.month+'</p>'
+    + '<div class="billamt" style="text-align:center;margin:8px 0">'+fmt(b.amount)+'</div>'
+    + '<button class="primary" onclick="payBill()">Pay now (UPI)</button>'
+    + '<button class="ghost" onclick="closeModal()">Cancel</button>');
+}
+function payBill(){
+  const b = myBill(); if(b) b.status = 'paid'; render();
+  openModal('<h3 style="text-align:center">Payment successful</h3>'
+    + '<div class="tick">✓</div>'
+    + '<p class="muted" style="text-align:center;margin:0">'+fmt(b.amount)+' • '+state.society.month+'</p>'
+    + '<button class="primary" onclick="closeModal()">Done</button>');
+}
+function showPostNotice(){
+  openModal('<h3>Post a notice</h3>'
+    + '<label>Title</label><input id="nt" placeholder="e.g. Lift maintenance"/>'
+    + '<label>Details</label><textarea id="nb" placeholder="Short message to all residents"></textarea>'
+    + '<button class="primary" onclick="postNotice()">Publish to all flats</button>'
+    + '<button class="ghost" onclick="closeModal()">Cancel</button>');
+}
+function postNotice(){
+  const title = document.getElementById('nt').value.trim() || 'Notice';
+  const body  = document.getElementById('nb').value.trim() || '';
+  state.notices.unshift({ id:nextId(), title, body, date:nowDate() }); closeModal(); render();
+}
+function showRaiseComplaint(){
+  openModal('<h3>Raise a complaint</h3>'
+    + '<label>What is the issue?</label><input id="ct" placeholder="e.g. Water leakage in basement"/>'
+    + '<button class="primary" onclick="raiseComplaint()">Submit to committee</button>'
+    + '<button class="ghost" onclick="closeModal()">Cancel</button>');
+}
+function raiseComplaint(){
+  const title = document.getElementById('ct').value.trim() || 'Complaint';
+  state.complaints.unshift({ id:nextId(), flat:state.me, title, status:'open', date:nowDate() });
+  closeModal(); render();
+}
+function resolveComplaint(id){ const c = state.complaints.find(x=>x.id===id); if(c) c.status='resolved'; render(); }
+function showScript(){
+  openModal('<h3>90-second pitch</h3>'
+    + '<ol class="scriptlist">'
+    + '<li>Start as <b>Guard</b> → tap "New visitor" for flat A-302.</li>'
+    + '<li>Switch to <b>Resident</b> → approve them. <i>(this is the magic)</i></li>'
+    + '<li>Show the <b>bill</b> → tap Pay now.</li>'
+    + '<li>As <b>Committee</b> → collection hits 100%, post a notice.</li>'
+    + '<li>Back to <b>Resident</b> → the notice is already there. Raise a complaint.</li>'
+    + '<li><b>Committee</b> → mark it resolved. Done.</li>'
+    + '</ol><button class="primary" onclick="closeModal()">Got it</button>');
+}
+
+/* ============================== RENDER: resident ============================== */
+function renderResident(){
+  return resHeader() + resApprovals() + resDeliveries() + resBill() + resNotices() + resComplaints();
+}
+function resHeader(){
+  return '<div class="hdr"><h2>Namaste, '+esc(myName().split(' ')[0])+' 🙏</h2>'
+    + '<div class="sub">'+state.society.name+'</div>'
+    + '<span class="flat">Flat '+state.me+'</span></div>';
+}
+function resApprovals(){
+  const pend = state.visitors.filter(v => v.flat===state.me && v.status==='pending');
+  let body;
+  if(!pend.length){
+    body = '<div class="card"><div class="empty"><span class="big">🚪</span>No one waiting at the gate.</div></div>';
+  } else {
+    body = pend.map(v => '<div class="card">'
+        + '<div class="row">'
+        + '<div class="avatar" style="background:'+v.tone+'">'+initials(v.name)+'</div>'
+        + '<div class="grow"><div class="nm">'+esc(v.name)+'</div>'
+        + '<div class="meta">'+esc(v.purpose)+' • '+v.time+'</div></div></div>'
+        + '<div class="btns">'
+        + '<button class="act approve" onclick="decideVisitor('+v.id+",'approved')\">Approve</button>"
+        + '<button class="act deny" onclick="decideVisitor('+v.id+",'denied')\">Deny</button>"
+        + '</div></div>').join('');
+  }
+  return '<div class="sec-t">At your gate</div>'+body;
+}
+function resDeliveries(){
+  const mine = state.deliveries.filter(d => d.flat===state.me && d.status==='expected');
+  const list = mine.map(d => '<div class="row" style="margin-top:10px">'
+      + '<div class="avatar" style="background:var(--accent-soft);color:var(--accent-d)">'+(d.type==='cab'?'🚕':'📦')+'</div>'
+      + '<div class="grow"><div class="nm">'+esc(d.vendor)+'</div><div class="meta">Gate code '+d.code+'</div></div>'
+      + '<span class="pill warn">Expected</span></div>').join('');
+  return '<div class="sec-t">Expecting someone?</div>'
+    + '<div class="card tight">'
+    + (list || '<div class="meta" style="margin-bottom:4px">Pre-approve a delivery or cab so the guard waves them in.</div>')
+    + '<div class="btns"><button class="act primary" onclick="showPreApprove()">＋ Pre-approve a delivery / cab</button></div>'
+    + '</div>';
+}
+function resBill(){
+  const b = myBill();
+  const right = b.status==='paid'
+    ? '<span class="pill ok">Paid ✓</span>'
+    : '<button class="act primary" style="flex:none;padding:9px 18px" onclick="showPay()">Pay now</button>';
+  return '<div class="sec-t">Maintenance</div>'
+    + '<div class="card"><div class="row">'
+    + '<div class="grow"><div class="meta">'+state.society.month+'</div>'
+    + '<div class="billamt">'+fmt(b.amount)+'</div></div>'
+    + right + '</div></div>';
+}
+function resNotices(){
+  const list = state.notices.map(n => '<div style="margin-top:11px">'
+      + '<div class="row" style="justify-content:space-between">'
+      + '<div class="nm">'+esc(n.title)+'</div><div class="meta">'+n.date+'</div></div>'
+      + (n.body?'<div class="meta" style="margin-top:2px">'+esc(n.body)+'</div>':'')
+      + '</div>').join('<div class="divline"></div>');
+  return '<div class="sec-t">Notices</div><div class="card tight">'+list+'</div>';
+}
+function resComplaints(){
+  const mine = state.complaints.filter(c => c.flat===state.me);
+  const list = mine.length ? mine.map(c => '<div class="row" style="margin-top:9px">'
+      + '<div class="grow"><div class="nm">'+esc(c.title)+'</div><div class="meta">'+c.date+'</div></div>'
+      + '<span class="pill '+(c.status==='open'?'warn':'ok')+'">'+(c.status==='open'?'Open':'Resolved')+'</span>'
+      + '</div>').join('') : '<div class="meta">No complaints raised.</div>';
+  return '<div class="sec-t">My complaints</div>'
+    + '<div class="card tight">'+list
+    + '<div class="btns"><button class="act ghost" onclick="showRaiseComplaint()">＋ Raise a complaint</button></div>'
+    + '</div>';
+}
+
+/* ============================== RENDER: guard ============================== */
+function renderGuard(){
+  return '<div class="hdr"><h2>Gate — '+state.society.name+'</h2>'
+      + '<div class="sub">On duty: '+esc(state.guardName)+'</div></div>'
+    + '<button class="bigbtn" onclick="showAddVisitor()">'
+      + '<div class="ic">➕</div><div class="grow"><div class="t">New visitor</div>'
+      + '<div class="s">Log someone at the gate &amp; notify the flat</div></div><div class="chev">›</div></button>'
+    + '<button class="bigbtn" onclick="showExpected()">'
+      + '<div class="ic">📦</div><div class="grow"><div class="t">Expected today</div>'
+      + '<div class="s">'+state.deliveries.filter(d=>d.status==='expected').length+' pre-approved arrival(s)</div></div>'
+      + '<div class="chev">›</div></button>'
+    + guardLog();
+}
+function guardLog(){
+  const rows = [...state.visitors].reverse().map(v => {
+    const cls = v.status==='approved'?'ok':v.status==='denied'?'bad':'grey';
+    const lbl = v.status.charAt(0).toUpperCase()+v.status.slice(1);
+    return '<div class="row" style="margin-top:11px">'
+      + '<div class="avatar" style="background:'+v.tone+'">'+initials(v.name)+'</div>'
+      + '<div class="grow"><div class="nm">'+esc(v.name)+'</div>'
+      + '<div class="meta">'+v.flat+' • '+esc(v.purpose)+' • '+v.time+'</div></div>'
+      + '<span class="pill '+cls+'">'+lbl+'</span></div>';
+  }).join('<div class="divline"></div>');
+  return '<div class="sec-t">Today\'s entry log</div><div class="card tight">'+rows+'</div>';
+}
+function showExpected(){
+  const exp = state.deliveries.filter(d => d.status==='expected');
+  const body = exp.length ? exp.map(d => '<div class="row" style="margin-top:11px">'
+      + '<div class="avatar" style="background:var(--accent-soft);color:var(--accent-d)">'+(d.type==='cab'?'🚕':'📦')+'</div>'
+      + '<div class="grow"><div class="nm">'+esc(d.vendor)+' → '+d.flat+'</div>'
+      + '<div class="meta">Gate code '+d.code+'</div></div>'
+      + '<button class="act approve" style="flex:none;padding:8px 13px;font-size:12.5px" '
+      + 'onclick="markArrived('+d.id+');showExpected()">Mark arrived</button></div>').join('')
+    : '<div class="empty"><span class="big">📭</span>No pre-approved arrivals right now.</div>';
+  openModal('<h3>Expected arrivals</h3>'+body+'<button class="ghost" onclick="closeModal()">Close</button>');
+}
+
+/* ============================== RENDER: committee ============================== */
+function renderCommittee(){
+  return '<div class="hdr"><h2>Committee — '+state.society.name+'</h2>'
+      + '<div class="sub">'+state.society.flats+' flats • '+state.society.month+'</div></div>'
+    + comCollection() + comNotices() + comComplaints();
+}
+function comCollection(){
+  const paid = state.bills.filter(b=>b.status==='paid').length, total = state.bills.length;
+  const pct = Math.round(paid/total*100);
+  const got = state.bills.filter(b=>b.status==='paid').reduce((s,b)=>s+b.amount,0);
+  const exp = state.bills.reduce((s,b)=>s+b.amount,0);
+  const rows = state.bills.map(b => '<div class="row" style="margin-top:10px">'
+      + '<div class="grow"><div class="nm">'+b.flat+'</div></div>'
+      + '<div class="meta" style="margin-right:10px">'+fmt(b.amount)+'</div>'
+      + '<span class="pill '+(b.status==='paid'?'ok':'warn')+'">'+(b.status==='paid'?'Paid':'Due')+'</span></div>').join('');
+  return '<div class="sec-t">Maintenance collection</div>'
+    + '<div class="card">'
+    + '<div class="row" style="justify-content:space-between">'
+    + '<div class="nm" style="font-size:16px">'+paid+' of '+total+' flats paid</div>'
+    + '<div class="nm" style="font-size:16px;color:var(--accent-d)">'+pct+'%</div></div>'
+    + '<div class="barwrap"><div class="bar" style="width:'+pct+'%"></div></div>'
+    + '<div class="stat"><span>Collected <b>'+fmt(got)+'</b></span><span>Expected <b>'+fmt(exp)+'</b></span></div>'
+    + '<div class="divline"></div>'+rows+'</div>';
+}
+function comNotices(){
+  const list = state.notices.map(n => '<div style="margin-top:11px">'
+      + '<div class="row" style="justify-content:space-between">'
+      + '<div class="nm">'+esc(n.title)+'</div><div class="meta">'+n.date+'</div></div>'
+      + (n.body?'<div class="meta" style="margin-top:2px">'+esc(n.body)+'</div>':'')
+      + '</div>').join('<div class="divline"></div>');
+  return '<div class="sec-t">Notices <a onclick="showPostNotice()">＋ Post notice</a></div>'
+    + '<div class="card tight">'+list+'</div>';
+}
+function comComplaints(){
+  const open = state.complaints.filter(c=>c.status==='open');
+  const done = state.complaints.filter(c=>c.status==='resolved');
+  const openRows = open.length ? open.map(c => '<div class="row" style="margin-top:10px">'
+      + '<div class="grow"><div class="nm">'+esc(c.title)+'</div><div class="meta">'+c.flat+' • '+c.date+'</div></div>'
+      + '<button class="act approve" style="flex:none;padding:8px 13px;font-size:12.5px" '
+      + 'onclick="resolveComplaint('+c.id+')">Resolve</button></div>').join('')
+    : '<div class="empty" style="padding:10px"><span class="big">✅</span>No open complaints.</div>';
+  const doneRows = done.map(c => '<div class="row" style="margin-top:9px">'
+      + '<div class="grow"><div class="nm muted">'+esc(c.title)+'</div><div class="meta">'+c.flat+' • '+c.date+'</div></div>'
+      + '<span class="pill ok">Resolved</span></div>').join('');
+  return '<div class="sec-t">Open complaints ('+open.length+')</div>'
+    + '<div class="card tight">'+openRows+(doneRows?'<div class="divline"></div>'+doneRows:'')+'</div>';
+}
+
+/* ============================== INIT ============================== */
+render();
+</script>
+</body>
+</html>
