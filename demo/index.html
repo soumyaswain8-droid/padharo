@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 <title>Padharo — society in your pocket</title>
 <!--
-  Padharo — पधारो ("please, come in")
-  Single-file pitch prototype for small apartment societies. No server, no network, no real users.
-  One in-memory `state` object is the source of truth; all three personas read/write it (live-linking).
-  Dynamic content is escaped via esc() before rendering, so user-typed text is never interpreted as HTML.
+  Padharo — पधारो ("please, come in")  ·  Living demo (Aurora Glass)
+  A 20-flat society (Green Meadows) on a regular morning. One in-memory `state` is the
+  source of truth; all 3 personas read/write it. A scripted "living" engine fires events
+  over time (toasts + notifications + badges) to feel like a real app mid-day.
+  Dynamic content is escaped via esc() before rendering.
 -->
 <style>
-  /* ===== Padharo · Aurora Glass theme ===== */
   :root{
     --ink:#f4f1ff; --muted:rgba(238,234,255,.62); --faint:rgba(238,234,255,.42);
     --accent:#ff8a4c; --accent-d:#ff7a36; --accent-2:#46e0d0;
@@ -34,18 +34,14 @@
   .brand{display:flex;align-items:center;gap:9px;margin-bottom:15px;color:rgba(255,255,255,.9)}
   .brand .logo{width:32px;height:32px;border-radius:10px;color:#fff;font-weight:800;font-size:18px;
        display:flex;align-items:center;justify-content:center;
-       background:linear-gradient(135deg,var(--accent),#ff6a8c);
-       box-shadow:0 6px 22px rgba(255,138,76,.6),var(--ring)}
-  .brand b{font-size:18px;letter-spacing:.2px}
-  .brand span{font-size:12.5px;color:var(--muted)}
+       background:linear-gradient(135deg,var(--accent),#ff6a8c);box-shadow:0 6px 22px rgba(255,138,76,.6),var(--ring)}
+  .brand b{font-size:18px;letter-spacing:.2px} .brand span{font-size:12.5px;color:var(--muted)}
 
   .phone{width:392px;max-width:96vw;height:812px;max-height:88vh;position:relative;
        border-radius:42px;overflow:hidden;display:flex;flex-direction:column;
        background:linear-gradient(165deg,#15102e,#1b1440 55%,#221651);
-       box-shadow:0 40px 90px rgba(80,40,160,.45),0 0 0 10px #07060f,0 0 0 12px rgba(255,255,255,.08),
-         0 0 60px rgba(120,80,255,.25)}
-  .notch{height:26px;background:rgba(0,0,0,.35);flex:none;position:relative;z-index:3}
-  /* aurora backdrop inside the phone (persists behind the re-rendered screen) */
+       box-shadow:0 40px 90px rgba(80,40,160,.45),0 0 0 10px #07060f,0 0 0 12px rgba(255,255,255,.08),0 0 60px rgba(120,80,255,.25)}
+  .notch{height:24px;background:rgba(0,0,0,.35);flex:none;position:relative;z-index:4}
   .aurora{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
   .aurora span{position:absolute;border-radius:50%;filter:blur(60px);opacity:.55;mix-blend-mode:screen;
        animation:auroraDrift 20s ease-in-out infinite}
@@ -54,49 +50,77 @@
   .aurora span:nth-child(3){width:240px;height:240px;background:#46e0d0;top:42%;left:30%;animation-delay:-12s;opacity:.4}
   @keyframes auroraDrift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(28px,34px) scale(1.15)}}
 
-  .switcher{display:flex;gap:6px;padding:11px 10px 9px;flex:none;align-items:center;position:relative;z-index:3;
+  /* status bar (persistent) */
+  .statusbar{display:flex;align-items:center;gap:10px;padding:8px 14px;flex:none;position:relative;z-index:4;
        background:rgba(12,9,28,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+       border-bottom:1px solid var(--brd-soft);font-size:12px}
+  .statusbar .live{display:flex;align-items:center;gap:6px;color:var(--ok);font-weight:800;letter-spacing:.05em}
+  .statusbar .live .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);
+       animation:pulse 1.6s ease-in-out infinite}
+  .statusbar .live.off{color:var(--faint)} .statusbar .live.off .dot{background:var(--faint);box-shadow:none;animation:none}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .statusbar .clock{color:rgba(255,255,255,.86);font-weight:700;font-variant-numeric:tabular-nums}
+  .statusbar .sp{flex:1}
+  .iconbtn{position:relative;width:32px;height:32px;border-radius:10px;border:1px solid var(--brd-soft);
+       background:var(--glass);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .iconbtn:active{transform:scale(.94)}
+  .badge{position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;
+       background:var(--bad);color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;
+       box-shadow:0 0 10px rgba(255,107,107,.7)}
+  .badge:empty,.badge.hide{display:none}
+
+  .switcher{display:flex;gap:6px;padding:9px 10px;flex:none;align-items:center;position:relative;z-index:4;
+       background:rgba(12,9,28,.4);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
        border-bottom:1px solid var(--brd-soft)}
   .switcher button{flex:1;border:1px solid var(--brd-soft);background:var(--glass);color:rgba(255,255,255,.72);
-       padding:10px 4px;border-radius:13px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.2s;
+       padding:9px 4px;border-radius:13px;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;
        display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1}
-  .switcher button .ic{font-size:17px}
-  .switcher button.active{color:#fff;border-color:transparent;
-       background:linear-gradient(135deg,var(--accent),#ff6a8c);
+  .switcher button .ic{font-size:16px}
+  .switcher button.active{color:#fff;border-color:transparent;background:linear-gradient(135deg,var(--accent),#ff6a8c);
        box-shadow:0 6px 18px rgba(255,138,76,.5),var(--ring)}
   .switcher .help{flex:none;width:36px;align-self:stretch;color:var(--accent-2);font-size:15px;border-radius:13px;
        background:var(--cyan-soft);border:1px solid rgba(70,224,208,.3)}
+
+  /* toasts (persistent overlay) */
+  .toasts{position:absolute;top:96px;left:0;right:0;z-index:45;display:flex;flex-direction:column;align-items:center;
+       gap:8px;pointer-events:none;padding:0 14px}
+  .toast{width:100%;display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:14px;
+       background:linear-gradient(135deg,rgba(40,30,74,.92),rgba(28,20,58,.95));border:1px solid var(--brd);
+       box-shadow:0 14px 36px rgba(0,0,0,.5),var(--ring);animation:toastIn .3s cubic-bezier(.2,.8,.25,1);backdrop-filter:blur(12px)}
+  .toast.out{animation:toastOut .3s ease forwards}
+  .toast .ic{width:34px;height:34px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;
+       font-size:17px;background:var(--accent-soft);border:1px solid var(--brd-soft)}
+  .toast.alert{border-color:rgba(255,107,107,.5);box-shadow:0 14px 36px rgba(255,60,60,.35)}
+  .toast.alert .ic{background:var(--bad-soft)}
+  .toast .t{font-size:13px;font-weight:700;line-height:1.25}.toast .d{font-size:11px;color:var(--muted)}
+  @keyframes toastIn{from{transform:translateY(-16px);opacity:0}to{transform:translateY(0);opacity:1}}
+  @keyframes toastOut{to{transform:translateY(-10px);opacity:0}}
 
   .screen{flex:1;overflow-y:auto;padding:6px 0 26px;position:relative;z-index:2}
   .screen::-webkit-scrollbar{width:0}
 
   .card{background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
-       border:1px solid var(--brd);border-radius:var(--radius);padding:15px;margin:11px 12px;
-       box-shadow:var(--glow-a),var(--ring)}
+       border:1px solid var(--brd);border-radius:var(--radius);padding:15px;margin:11px 12px;box-shadow:var(--glow-a),var(--ring)}
   .card.tight{padding:13px 15px}
-  .hdr{border-radius:var(--radius);margin:11px 12px;padding:17px;color:#fff;position:relative;overflow:hidden;
-       background:linear-gradient(135deg,rgba(255,138,76,.92),rgba(168,90,255,.82));
-       border:1px solid rgba(255,255,255,.18);
+  .hdr{border-radius:var(--radius);margin:11px 12px;padding:16px;color:#fff;position:relative;overflow:hidden;
+       background:linear-gradient(135deg,rgba(255,138,76,.92),rgba(168,90,255,.82));border:1px solid rgba(255,255,255,.18);
        box-shadow:0 12px 34px rgba(168,90,255,.4),var(--ring)}
-  .hdr h2{margin:0 0 3px;font-size:19px}
-  .hdr .sub{font-size:12.5px;opacity:.95}
-  .hdr .flat{display:inline-block;margin-top:10px;background:rgba(255,255,255,.22);padding:3px 12px;
-       border-radius:20px;font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.25)}
+  .hdr h2{margin:0 0 3px;font-size:18px}.hdr .sub{font-size:12.5px;opacity:.95}
+  .hdr .flat{display:inline-block;margin-top:9px;background:rgba(255,255,255,.22);padding:3px 12px;border-radius:20px;
+       font-size:12px;font-weight:700;border:1px solid rgba(255,255,255,.25)}
   .sec-t{font-size:11px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--faint);
        margin:18px 22px 4px;display:flex;justify-content:space-between;align-items:center}
   .sec-t a{color:var(--accent-2);text-decoration:none;font-size:11.5px;font-weight:700;cursor:pointer}
 
   .row{display:flex;align-items:center;gap:11px}
   .avatar{width:43px;height:43px;border-radius:13px;flex:none;display:flex;align-items:center;justify-content:center;
-       color:#fff;font-weight:700;font-size:16px;box-shadow:0 6px 16px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.3)}
+       color:#fff;font-weight:700;font-size:15px;box-shadow:0 6px 16px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.3)}
   .grow{flex:1;min-width:0}
-  .nm{font-weight:700;font-size:14.5px;color:#fff}
-  .meta{font-size:12.5px;color:var(--muted);margin-top:1px}
+  .nm{font-weight:700;font-size:14px;color:#fff}.meta{font-size:12px;color:var(--muted);margin-top:1px}
   .muted{color:var(--muted)}
 
-  .pill{display:inline-block;padding:4px 11px;border-radius:20px;font-size:11.5px;font-weight:700;
-       border:1px solid transparent;backdrop-filter:blur(6px)}
-  .pill.ok{background:var(--ok-soft);color:var(--ok);border-color:rgba(52,224,161,.35);box-shadow:0 0 14px rgba(52,224,161,.25)}
+  .pill{display:inline-block;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid transparent}
+  .pill.ok{background:var(--ok-soft);color:var(--ok);border-color:rgba(52,224,161,.35)}
   .pill.warn{background:var(--warn-soft);color:var(--warn);border-color:rgba(255,194,75,.35)}
   .pill.bad{background:var(--bad-soft);color:var(--bad);border-color:rgba(255,107,107,.35)}
   .pill.grey{background:var(--glass-2);color:rgba(255,255,255,.66);border-color:var(--brd-soft)}
@@ -111,60 +135,56 @@
   .primary{background:linear-gradient(135deg,var(--accent),#ff6a8c);box-shadow:0 6px 18px rgba(255,138,76,.45)}
   .primary:hover{filter:brightness(1.06)}
 
-  .empty{text-align:center;color:var(--muted);font-size:13.5px;padding:18px 10px}
-  .empty .big{font-size:30px;display:block;margin-bottom:6px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.4))}
+  /* quick actions */
+  .qa{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:11px 12px}
+  .qa-btn{border:1px solid var(--brd-soft);background:var(--glass);border-radius:15px;padding:12px 4px;cursor:pointer;
+       display:flex;flex-direction:column;align-items:center;gap:6px;color:#fff;transition:.18s}
+  .qa-btn:active{transform:scale(.95)}.qa-btn:hover{background:var(--glass-2)}
+  .qa-btn .ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;
+       background:linear-gradient(135deg,rgba(255,138,76,.85),rgba(168,90,255,.65));box-shadow:0 5px 14px rgba(168,90,255,.4)}
+  .qa-btn .l{font-size:10.5px;font-weight:700;color:rgba(255,255,255,.85)}
+  .qa-btn.sos .ic{background:linear-gradient(135deg,#ff5c5c,#d12f4f);box-shadow:0 5px 16px rgba(255,60,60,.55)}
 
-  .bigbtn{display:flex;align-items:center;gap:13px;width:100%;cursor:pointer;text-align:left;
-       border:1px solid var(--brd);border-radius:var(--radius);padding:17px 16px;margin:11px 12px;
-       background:var(--glass);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  .empty{text-align:center;color:var(--muted);font-size:13px;padding:16px 10px}
+  .empty .big{font-size:28px;display:block;margin-bottom:6px}
+
+  .bigbtn{display:flex;align-items:center;gap:13px;width:100%;cursor:pointer;text-align:left;border:1px solid var(--brd);
+       border-radius:var(--radius);padding:16px;margin:11px 12px;background:var(--glass);backdrop-filter:blur(18px);
        box-shadow:var(--glow-a),var(--ring);transition:.18s}
   .bigbtn:hover{background:var(--glass-2);transform:translateY(-1px)}
-  .bigbtn .ic{width:48px;height:48px;border-radius:14px;color:#fff;display:flex;align-items:center;
-       justify-content:center;font-size:22px;flex:none;
-       background:linear-gradient(135deg,rgba(255,138,76,.9),rgba(168,90,255,.7));
-       box-shadow:0 6px 16px rgba(168,90,255,.4)}
-  .bigbtn .t{font-weight:800;font-size:15.5px;color:#fff} .bigbtn .s{font-size:12.5px;color:var(--muted)}
+  .bigbtn .ic{width:46px;height:46px;border-radius:14px;color:#fff;display:flex;align-items:center;justify-content:center;
+       font-size:21px;flex:none;background:linear-gradient(135deg,rgba(255,138,76,.9),rgba(168,90,255,.7));box-shadow:0 6px 16px rgba(168,90,255,.4)}
+  .bigbtn .t{font-weight:800;font-size:15px;color:#fff}.bigbtn .s{font-size:12px;color:var(--muted)}
   .bigbtn .chev{color:var(--faint);font-size:22px}
 
-  .billamt{font-size:31px;font-weight:800;letter-spacing:-.5px;color:#fff;
-       text-shadow:0 0 22px rgba(255,138,76,.4)}
+  .billamt{font-size:30px;font-weight:800;letter-spacing:-.5px;color:#fff;text-shadow:0 0 22px rgba(255,138,76,.4)}
   .barwrap{height:10px;background:rgba(255,255,255,.1);border-radius:10px;overflow:hidden;margin:10px 0 4px}
-  .bar{height:100%;border-radius:10px;transition:.5s;
-       background:linear-gradient(90deg,var(--accent),var(--accent-2));box-shadow:0 0 16px rgba(70,224,208,.5)}
-  .stat{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
-  .stat b{color:#fff}
-
+  .bar{height:100%;border-radius:10px;transition:.5s;background:linear-gradient(90deg,var(--accent),var(--accent-2));box-shadow:0 0 16px rgba(70,224,208,.5)}
+  .stat{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}.stat b{color:#fff}
   .divline{height:1px;background:var(--brd-soft);margin:12px 0}
 
   #modal:empty{display:none}
-  .overlay{position:absolute;inset:0;background:rgba(6,4,16,.62);backdrop-filter:blur(4px);
-       display:flex;flex-direction:column;justify-content:flex-end;z-index:50;animation:fade .18s ease}
+  .overlay{position:absolute;inset:0;background:rgba(6,4,16,.62);backdrop-filter:blur(4px);display:flex;flex-direction:column;
+       justify-content:flex-end;z-index:50;animation:fade .18s ease}
   .sheet{border-radius:24px 24px 0 0;padding:22px 18px 26px;animation:rise .28s cubic-bezier(.2,.8,.25,1);
-       background:linear-gradient(165deg,rgba(34,26,68,.92),rgba(22,16,46,.96));
-       backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);
-       border-top:1px solid var(--brd);box-shadow:0 -20px 60px rgba(0,0,0,.5)}
+       background:linear-gradient(165deg,rgba(34,26,68,.95),rgba(22,16,46,.97));backdrop-filter:blur(26px);
+       border-top:1px solid var(--brd);box-shadow:0 -20px 60px rgba(0,0,0,.5);max-height:86%;overflow-y:auto}
   .sheet h3{margin:0 0 14px;font-size:18px;color:#fff}
-  .sheet label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin:12px 0 5px;
-       letter-spacing:.03em}
-  .sheet input,.sheet select,.sheet textarea{width:100%;border:1px solid var(--brd);border-radius:13px;
-       padding:12px;font-size:15px;background:rgba(255,255,255,.06);color:#fff;outline:none;transition:.18s}
+  .sheet label{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin:12px 0 5px;letter-spacing:.03em}
+  .sheet input,.sheet select,.sheet textarea{width:100%;border:1px solid var(--brd);border-radius:13px;padding:12px;
+       font-size:15px;background:rgba(255,255,255,.06);color:#fff;outline:none;transition:.18s}
   .sheet input::placeholder,.sheet textarea::placeholder{color:var(--faint)}
-  .sheet input:focus,.sheet select:focus,.sheet textarea:focus{border-color:var(--accent-2);
-       box-shadow:0 0 0 3px rgba(70,224,208,.18)}
-  .sheet select{appearance:none}
-  .sheet select option{color:#1a1530}
-  .sheet textarea{min-height:64px;resize:none}
-  .sheet .primary,.sheet .ghost{width:100%;border:0;border-radius:14px;padding:14px;font-size:14.5px;
-       font-weight:700;cursor:pointer;margin-top:16px;color:#fff}
-  .bigcode{font-size:44px;font-weight:800;letter-spacing:12px;color:#fff;text-align:center;
+  .sheet input:focus,.sheet select:focus,.sheet textarea:focus{border-color:var(--accent-2);box-shadow:0 0 0 3px rgba(70,224,208,.18)}
+  .sheet select{appearance:none}.sheet select option{color:#1a1530}.sheet textarea{min-height:64px;resize:none}
+  .sheet .primary,.sheet .ghost{width:100%;border:0;border-radius:14px;padding:14px;font-size:14.5px;font-weight:700;cursor:pointer;margin-top:16px;color:#fff}
+  .bigcode{font-size:42px;font-weight:800;letter-spacing:12px;color:#fff;text-align:center;
        background:linear-gradient(135deg,var(--accent-soft),var(--cyan-soft));border:1px solid var(--brd);
        border-radius:16px;padding:20px;margin:14px 0 4px;text-shadow:0 0 26px rgba(255,138,76,.6)}
-  .tick{width:66px;height:66px;border-radius:50%;color:#fff;font-size:34px;font-weight:800;
-       display:flex;align-items:center;justify-content:center;margin:6px auto 14px;
-       background:linear-gradient(135deg,#2fd996,#19b87c);box-shadow:0 0 30px rgba(52,224,161,.55)}
+  .tick{width:64px;height:64px;border-radius:50%;color:#fff;font-size:33px;font-weight:800;display:flex;align-items:center;
+       justify-content:center;margin:6px auto 14px;background:linear-gradient(135deg,#2fd996,#19b87c);box-shadow:0 0 30px rgba(52,224,161,.55)}
+  .tick.red{background:linear-gradient(135deg,#ff5c5c,#d12f4f);box-shadow:0 0 30px rgba(255,60,60,.6)}
   .scriptlist{margin:0;padding-left:20px;font-size:14px;line-height:1.75;color:rgba(255,255,255,.9)}
-  .scriptlist li{margin-bottom:5px}
-  .scriptlist b{color:var(--accent-2)}
+  .scriptlist li{margin-bottom:5px}.scriptlist b{color:var(--accent-2)}
   @keyframes rise{from{transform:translateY(100%)}to{transform:translateY(0)}}
   @keyframes fade{from{opacity:0}to{opacity:1}}
   .foot{text-align:center;font-size:11px;color:var(--faint);margin-top:15px}
@@ -179,321 +199,478 @@
   <div class="phone">
     <div class="aurora"><span></span><span></span><span></span></div>
     <div class="notch"></div>
+    <div class="statusbar">
+      <span class="live" id="liveTag"><span class="dot"></span>LIVE</span>
+      <span class="clock" id="clock">09:14</span>
+      <span class="sp"></span>
+      <button class="iconbtn" onclick="showNotifs()">🔔<span class="badge" id="badge"></span></button>
+      <button class="iconbtn" id="engineBtn" onclick="toggleEngine()" title="Pause live events">⏸</button>
+    </div>
     <div class="switcher">
       <button data-p="resident"  onclick="setPersona('resident')"><span class="ic">🏠</span>Resident</button>
       <button data-p="guard"     onclick="setPersona('guard')"><span class="ic">🛡️</span>Guard</button>
       <button data-p="committee" onclick="setPersona('committee')"><span class="ic">📋</span>Committee</button>
       <button class="help" onclick="showScript()" title="How to demo">?</button>
     </div>
+    <div class="toasts" id="toasts"></div>
     <div id="screen" class="screen"></div>
     <div id="modal"></div>
   </div>
-  <div class="foot">Prototype • mock data • no real accounts or payments</div>
+  <div class="foot">Living demo • Green Meadows, 20 flats • mock data, no real accounts</div>
 
 <script>
-/* ============================== STATE / SEED DATA ============================== */
-const state = {
-  persona: 'resident',
-  me: 'A-302',
-  society: { name:'Green Meadows', flats:48, month:'May 2026' },
-  guardName: 'Lakshman',
-  residents: [
-    { flat:'A-302', name:'Soumya Swain', phone:'98xxxxxx01' },
-    { flat:'A-101', name:'Rao Family',   phone:'98xxxxxx02' },
-    { flat:'B-204', name:'Mehta Family', phone:'98xxxxxx03' },
-  ],
-  visitors: [
-    { id:1, name:'Ramesh (Plumber)', flat:'A-302', purpose:'Service', status:'pending',  time:'10:42 AM', tone:'#6c8cd5' },
-    { id:2, name:'Anjali (Guest)',   flat:'A-101', purpose:'Guest',   status:'approved', time:'09:15 AM', tone:'#cf6f9b' },
-  ],
-  deliveries: [ { id:1, type:'delivery', vendor:'Amazon', flat:'A-302', code:'4821', status:'expected' } ],
-  bills: [
-    { flat:'A-302', amount:2400, status:'due'  },
-    { flat:'A-101', amount:2400, status:'paid' },
-    { flat:'B-204', amount:2400, status:'paid' },
-  ],
-  notices: [
-    { id:1, title:'Water tanker cleaning', body:'Water supply off Sat 8–11 AM for tank cleaning.', date:'22 May' },
-    { id:2, title:'AGM this Sunday',        body:'Annual meeting 6 PM at the clubhouse. Please attend.', date:'20 May' },
-  ],
-  complaints: [ { id:1, flat:'A-302', title:'Lift B making noise', status:'open', date:'21 May' } ],
-  seq: 100,
-};
-const nextId   = () => ++state.seq;
-const myBill   = () => state.bills.find(b => b.flat === state.me);
-const myName   = () => (state.residents.find(r => r.flat === state.me)||{}).name || 'Resident';
-const fmt      = n  => '₹' + n.toLocaleString('en-IN');
-const esc      = s  => String(s).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
-const nowTime  = () => new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}).toUpperCase().replace(/\s+/g,' ');
-const nowDate  = () => new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
-const initials = s  => s.replace(/[^A-Za-z ]/g,'').trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
+/* ====================== SEED (fresh copy each replay) ====================== */
+const FLATS = [
+  ['A-101','Rao Family'],['A-102','Mehta Family'],['A-201','Sharma Family'],['A-202','Pillai Family'],
+  ['A-301','Banerjee Family'],['A-302','Soumya Swain'],['A-401','Nair Family'],['A-402','Gupta Family'],
+  ['A-501','Fernandes Family'],['A-502','Khan Family'],
+  ['B-101','Reddy Family'],['B-102','Joshi Family'],['B-201','Desai Family'],['B-202','Iyer Family'],
+  ['B-301','Verma Family'],['B-302','Kulkarni Family'],['B-401','Chawla Family'],['B-402','Ghosh Family'],
+  ['B-501','Menon Family'],['B-502','Sinha Family'],
+];
+const DUE = ['A-302','A-202','A-401','B-102','B-301','B-402','B-501'];   // 7 due, 13 paid (~65%)
+const TONES = ['#6c8cd5','#cf6f9b','#5aa6a0','#d59a5a','#8c7bd6','#d6695a','#5a9bd6'];
 
-/* ============================== RENDER: shared ============================== */
-const screenEl = () => document.getElementById('screen');
-function setPersona(p){ state.persona = p; render(); }
+function freshState(){
+  return {
+    persona:'resident', me:'A-302', seq:1000,
+    society:{ name:'Green Meadows', flats:20, month:'May 2026' }, guardName:'Lakshman',
+    residents: FLATS.map(([flat,name])=>({flat,name})),
+    bills: FLATS.map(([flat])=>({flat, amount:2400, status: DUE.includes(flat)?'due':'paid'})),
+    visitors:[
+      {id:1,name:'Ramesh (Plumber)',flat:'A-302',purpose:'Service',status:'pending', time:'10:42 AM',tone:'#6c8cd5'},
+      {id:2,name:'Anjali (Guest)',  flat:'A-201',purpose:'Guest',  status:'approved',time:'09:15 AM',tone:'#cf6f9b'},
+      {id:3,name:'Zomato',          flat:'A-102',purpose:'Food delivery',status:'approved',time:'09:40 AM',tone:'#d6695a'},
+      {id:4,name:'Iqbal (Electrician)',flat:'B-202',purpose:'Service',status:'pending',time:'10:05 AM',tone:'#5aa6a0'},
+      {id:5,name:'Priya (Guest)',   flat:'B-401',purpose:'Guest',  status:'approved',time:'08:50 AM',tone:'#8c7bd6'},
+      {id:6,name:'DTDC Courier',    flat:'A-501',purpose:'Parcel', status:'denied',  time:'09:05 AM',tone:'#d59a5a'},
+    ],
+    deliveries:[
+      {id:7,type:'delivery',vendor:'Amazon', flat:'A-302',code:'4821',status:'expected'},
+      {id:8,type:'delivery',vendor:'Flipkart',flat:'B-102',code:'7240',status:'expected'},
+      {id:9,type:'delivery',vendor:'Swiggy', flat:'A-202',code:'3155',status:'expected'},
+      {id:10,type:'cab',    vendor:'Uber',   flat:'B-301',code:'9080',status:'expected'},
+    ],
+    staff:[
+      {id:11,name:'Lakshmi',role:'Maid',    flats:'A-302, A-201, B-101',status:'in', time:'08:10 AM'},
+      {id:12,name:'Suresh', role:'Cook',    flats:'A-302, B-202',       status:'in', time:'07:55 AM'},
+      {id:13,name:'Geeta',  role:'Maid',    flats:'B-301, B-402',       status:'in', time:'08:25 AM'},
+      {id:14,name:'Mohan',  role:'Gardener',flats:'Common areas',       status:'in', time:'07:30 AM'},
+      {id:15,name:'Ravi',   role:'Driver',  flats:'A-401',              status:'out',time:'—'},
+      {id:16,name:'Anil',   role:'Driver',  flats:'B-501',              status:'out',time:'—'},
+    ],
+    amenities:['Clubhouse','Gym','Party Hall','Tennis Court'],
+    bookings:[
+      {id:17,amenity:'Party Hall',flat:'A-401',by:'Nair Family', when:'Sat 6:00 PM',note:'Birthday'},
+      {id:18,amenity:'Clubhouse', flat:'B-202',by:'Iyer Family', when:'Sun 11:00 AM',note:'Function'},
+    ],
+    notices:[
+      {id:19,title:'Water tanker cleaning',body:'Supply off Sat 8–11 AM for tank cleaning.',date:'22 May'},
+      {id:20,title:'AGM this Sunday',       body:'Annual meeting 6 PM at the clubhouse. Please attend.',date:'20 May'},
+      {id:21,title:'Lift-B maintenance',    body:'Lift B serviced Wed 10 AM–12 PM. Use Lift A.',date:'24 May'},
+      {id:22,title:'Summer water timing',   body:'Borewell supply 6–8 AM & 6–8 PM until June.',date:'23 May'},
+    ],
+    complaints:[
+      {id:23,flat:'A-302',title:'Lift B making noise',     status:'open',    date:'21 May'},
+      {id:24,flat:'B-102',title:'Water leakage in basement',status:'open',   date:'23 May'},
+      {id:25,flat:'B-301',title:'Streetlight near B-block out',status:'open', date:'24 May'},
+      {id:26,flat:'A-202',title:'Parking blocked by visitor',status:'resolved',date:'19 May'},
+      {id:27,flat:'B-401',title:'Garbage not collected',   status:'open',    date:'25 May'},
+    ],
+    alerts:[],          // SOS log
+    notifications:[],   // bell feed {id,icon,text,time,read}
+  };
+}
+let state = freshState();
+
+/* ====================== helpers ====================== */
+const nextId   = ()=>++state.seq;
+const myBill   = ()=>state.bills.find(b=>b.flat===state.me);
+const nameOf   = f=>(state.residents.find(r=>r.flat===f)||{}).name||f;
+const myName   = ()=>nameOf(state.me);
+const fmt      = n=>'₹'+n.toLocaleString('en-IN');
+const esc      = s=>String(s).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+const initials = s=>s.replace(/[^A-Za-z ]/g,'').trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
+const randTone = ()=>TONES[Math.floor(Math.random()*TONES.length)];
+
+/* ====================== clock (simulated morning) ====================== */
+let simMin = 9*60+14, clockTimer=null;
+function renderClock(){ const h=Math.floor(simMin/60)%24, m=simMin%60;
+  document.getElementById('clock').textContent = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); }
+function nowLabel(){ const h12=((Math.floor(simMin/60)+11)%12)+1, m=simMin%60, ap=Math.floor(simMin/60)%24<12?'AM':'PM';
+  return h12+':'+String(m).padStart(2,'0')+' '+ap; }
+
+/* ====================== toasts + notifications ====================== */
+function showToast(icon,text,sub,alert){
+  const wrap=document.getElementById('toasts');
+  const el=document.createElement('div'); el.className='toast'+(alert?' alert':'');
+  const ic=document.createElement('div'); ic.className='ic'; ic.textContent=icon;
+  const tx=document.createElement('div'); tx.className='grow';
+  const t=document.createElement('div'); t.className='t'; t.textContent=text;
+  tx.appendChild(t);
+  if(sub){const d=document.createElement('div');d.className='d';d.textContent=sub;tx.appendChild(d);}
+  el.appendChild(ic); el.appendChild(tx); wrap.appendChild(el);
+  setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300);},4200);
+}
+function notify(icon,text){ state.notifications.unshift({id:nextId(),icon,text,time:nowLabel(),read:false}); updateBadge(); }
+function updateBadge(){ const n=state.notifications.filter(x=>!x.read).length;
+  const b=document.getElementById('badge'); b.textContent=n?String(n):''; b.classList.toggle('hide',!n); }
+function showNotifs(){
+  state.notifications.forEach(x=>x.read=true); updateBadge();
+  const list = state.notifications.length
+    ? state.notifications.map(n=>`<div class="row" style="margin-top:11px">
+        <div class="avatar" style="background:var(--glass-2);font-size:18px">${n.icon}</div>
+        <div class="grow"><div class="nm">${esc(n.text)}</div><div class="meta">${n.time}</div></div></div>`).join('<div class="divline"></div>')
+    : '<div class="empty"><span class="big">🔔</span>No notifications yet.</div>';
+  openModal(`<h3>Notifications</h3>${list}<button class="ghost" onclick="closeModal()">Close</button>`);
+}
+
+/* ====================== render dispatch ====================== */
+const screenEl=()=>document.getElementById('screen');
+function setPersona(p){ state.persona=p; render(); }
 function render(){
-  document.querySelectorAll('.switcher button[data-p]').forEach(b =>
-    b.classList.toggle('active', b.dataset.p === state.persona));
-  const views = { resident: renderResident, guard: renderGuard, committee: renderCommittee };
-  screenEl().innerHTML = views[state.persona]();
+  document.querySelectorAll('.switcher button[data-p]').forEach(b=>b.classList.toggle('active',b.dataset.p===state.persona));
+  ({resident:renderResident,guard:renderGuard,committee:renderCommittee}[state.persona])();
 }
+function paint(html){ screenEl().innerHTML=html; }   // controlled prototype content
 
-/* ============================== MODALS ============================== */
+/* ====================== modals ====================== */
 function openModal(html){
-  document.getElementById('modal').innerHTML =
-    '<div class="overlay" onclick="closeModal()"><div class="sheet" onclick="event.stopPropagation()">'+html+'</div></div>';
+  document.getElementById('modal').innerHTML='<div class="overlay" onclick="closeModal()"><div class="sheet" onclick="event.stopPropagation()">'+html+'</div></div>';
 }
-function closeModal(){ document.getElementById('modal').innerHTML = ''; }
+function closeModal(){ document.getElementById('modal').innerHTML=''; }
 
-/* ============================== ACTIONS ============================== */
-function decideVisitor(id, decision){
-  const v = state.visitors.find(x => x.id === id); if (v) v.status = decision; render();
+/* ====================== real-time CTAs ====================== */
+function callGuard(){ showToast('📞','Calling '+state.guardName+' at the gate…','Connecting'); notify('📞','You called the guard'); }
+function callCommittee(){ showToast('📞','Calling the committee office…','Connecting'); notify('📞','You called the committee'); }
+function intercom(flat){ showToast('📟','Intercom ringing '+flat+'…','Connecting'); }
+function openGate(who){ showToast('🚪','Gate opened'+(who?' for '+who:''),'Auto-closes in 20s'); notify('🚪','Gate opened'+(who?' for '+who:'')); }
+function sos(){
+  const a={id:nextId(),by:state.me,name:myName(),time:nowLabel()}; state.alerts.unshift(a);
+  notify('🚨','SOS raised by '+state.me); render();
+  showToast('🚨','SOS sent to guard & committee','Help is on the way',true);
+  openModal(`<h3 style="text-align:center">Emergency alert sent</h3><div class="tick red">🚨</div>
+    <p class="muted" style="text-align:center;margin:0">The guard and committee have been alerted for <b style="color:#fff">${state.me}</b>. Stay safe.</p>
+    <button class="primary" onclick="closeModal()">Done</button>`);
 }
+function clearAlert(id){ state.alerts=state.alerts.filter(a=>a.id!==id); render(); showToast('✅','SOS marked handled'); }
+
+/* visitor approve/deny */
+function decideVisitor(id,decision){
+  const v=state.visitors.find(x=>x.id===id); if(!v)return; v.status=decision;
+  notify(decision==='approved'?'✅':'⛔', (decision==='approved'?'Approved ':'Denied ')+v.name+' → '+v.flat);
+  if(decision==='approved') showToast('✅',v.name+' approved','Gate notified for '+v.flat);
+  render();
+}
+/* add visitor (guard) */
 function showAddVisitor(){
-  const opts = state.residents.map(r => '<option value="'+r.flat+'">'+r.flat+' — '+esc(r.name)+'</option>').join('');
-  openModal('<h3>New visitor at gate</h3>'
-    + '<label>Visitor name</label><input id="vn" placeholder="e.g. Ramesh"/>'
-    + '<label>Visiting flat</label><select id="vf">'+opts+'</select>'
-    + '<label>Purpose</label><input id="vp" placeholder="e.g. Delivery, Guest"/>'
-    + '<button class="primary" onclick="addVisitor()">Notify resident</button>'
-    + '<button class="ghost" onclick="closeModal()">Cancel</button>');
+  const opts=state.residents.map(r=>`<option value="${r.flat}">${r.flat} — ${esc(r.name)}</option>`).join('');
+  openModal(`<h3>New visitor at gate</h3>
+    <label>Visitor name</label><input id="vn" placeholder="e.g. Ramesh"/>
+    <label>Visiting flat</label><select id="vf">${opts}</select>
+    <label>Purpose</label><input id="vp" placeholder="e.g. Delivery, Guest"/>
+    <button class="primary" onclick="addVisitor()">Notify resident</button>
+    <button class="ghost" onclick="closeModal()">Cancel</button>`);
 }
 function addVisitor(){
-  const name = document.getElementById('vn').value.trim() || 'Visitor';
-  const flat = document.getElementById('vf').value;
-  const purpose = document.getElementById('vp').value.trim() || 'Visit';
-  const tones = ['#6c8cd5','#cf6f9b','#5aa6a0','#d59a5a','#8c7bd6'];
-  state.visitors.push({ id:nextId(), name, flat, purpose, status:'pending',
-    time:nowTime(), tone:tones[Math.floor(Math.random()*tones.length)] });
+  const name=document.getElementById('vn').value.trim()||'Visitor', flat=document.getElementById('vf').value,
+        purpose=document.getElementById('vp').value.trim()||'Visit';
+  state.visitors.push({id:nextId(),name,flat,purpose,status:'pending',time:nowLabel(),tone:randTone()});
+  notify('🔔','New visitor for '+flat+': '+name); showToast('🔔','Resident notified',name+' → '+flat);
   closeModal(); render();
 }
+/* deliveries */
 function showPreApprove(){
-  openModal('<h3>Pre-approve an arrival</h3>'
-    + '<label>Type</label>'
-    + '<select id="dt"><option value="delivery">Delivery</option><option value="cab">Cab</option></select>'
-    + '<label>Who is coming?</label><input id="dv" placeholder="e.g. Amazon, Uber"/>'
-    + '<button class="primary" onclick="preApprove()">Get gate code</button>'
-    + '<button class="ghost" onclick="closeModal()">Cancel</button>');
+  openModal(`<h3>Pre-approve an arrival</h3>
+    <label>Type</label><select id="dt"><option value="delivery">Delivery</option><option value="cab">Cab</option></select>
+    <label>Who is coming?</label><input id="dv" placeholder="e.g. Amazon, Uber"/>
+    <button class="primary" onclick="preApprove()">Get gate code</button>
+    <button class="ghost" onclick="closeModal()">Cancel</button>`);
 }
 function preApprove(){
-  const type = document.getElementById('dt').value;
-  const vendor = document.getElementById('dv').value.trim() || (type==='cab' ? 'Cab' : 'Delivery');
-  const code = String(1000 + Math.floor(Math.random()*9000));
-  state.deliveries.push({ id:nextId(), type, vendor, flat:state.me, code, status:'expected' });
-  render();
-  openModal('<h3>Gate code ready</h3><p class="muted" style="margin:0">Share this with '+esc(vendor)+' — the guard will let them in.</p>'
-    + '<div class="bigcode">'+code+'</div>'
-    + '<button class="primary" onclick="closeModal()">Done</button>');
+  const type=document.getElementById('dt').value, vendor=document.getElementById('dv').value.trim()||(type==='cab'?'Cab':'Delivery'),
+        code=String(1000+Math.floor(Math.random()*9000));
+  state.deliveries.push({id:nextId(),type,vendor,flat:state.me,code,status:'expected'}); render();
+  notify('📦','Pre-approved '+vendor+' for '+state.me);
+  openModal(`<h3>Gate code ready</h3><p class="muted" style="margin:0">Share with ${esc(vendor)} — the guard will let them in.</p>
+    <div class="bigcode">${code}</div><button class="primary" onclick="closeModal()">Done</button>`);
 }
-function markArrived(id){ const d = state.deliveries.find(x=>x.id===id); if(d) d.status='arrived'; render(); }
-function showPay(){
-  const b = myBill();
-  openModal('<h3>Pay maintenance</h3>'
-    + '<p class="muted" style="margin:0 0 6px">'+state.society.name+' • '+state.society.month+'</p>'
-    + '<div class="billamt" style="text-align:center;margin:8px 0">'+fmt(b.amount)+'</div>'
-    + '<button class="primary" onclick="payBill()">Pay now (UPI)</button>'
-    + '<button class="ghost" onclick="closeModal()">Cancel</button>');
+function markArrived(id){ const d=state.deliveries.find(x=>x.id===id); if(d){d.status='arrived';notify('📦',d.vendor+' arrived → '+d.flat);showToast('📦',d.vendor+' marked arrived',d.flat);} render(); }
+/* pay */
+function showPay(){ const b=myBill();
+  openModal(`<h3>Pay maintenance</h3><p class="muted" style="margin:0 0 6px">${state.society.name} • ${state.society.month}</p>
+    <div class="billamt" style="text-align:center;margin:8px 0">${fmt(b.amount)}</div>
+    <button class="primary" onclick="payBill()">Pay now (UPI)</button>
+    <button class="ghost" onclick="closeModal()">Cancel</button>`);
 }
-function payBill(){
-  const b = myBill(); if(b) b.status = 'paid'; render();
-  openModal('<h3 style="text-align:center">Payment successful</h3>'
-    + '<div class="tick">✓</div>'
-    + '<p class="muted" style="text-align:center;margin:0">'+fmt(b.amount)+' • '+state.society.month+'</p>'
-    + '<button class="primary" onclick="closeModal()">Done</button>');
+function payBill(){ const b=myBill(); if(b)b.status='paid'; render(); notify('💳',state.me+' paid maintenance');
+  openModal(`<h3 style="text-align:center">Payment successful</h3><div class="tick">✓</div>
+    <p class="muted" style="text-align:center;margin:0">${fmt(b.amount)} • ${state.society.month}</p>
+    <button class="primary" onclick="closeModal()">Done</button>`);
 }
-function showPostNotice(){
-  openModal('<h3>Post a notice</h3>'
-    + '<label>Title</label><input id="nt" placeholder="e.g. Lift maintenance"/>'
-    + '<label>Details</label><textarea id="nb" placeholder="Short message to all residents"></textarea>'
-    + '<button class="primary" onclick="postNotice()">Publish to all flats</button>'
-    + '<button class="ghost" onclick="closeModal()">Cancel</button>');
+/* notices + complaints */
+function showPostNotice(){ openModal(`<h3>Post a notice</h3>
+    <label>Title</label><input id="nt" placeholder="e.g. Lift maintenance"/>
+    <label>Details</label><textarea id="nb" placeholder="Short message to all residents"></textarea>
+    <button class="primary" onclick="postNotice()">Publish to all flats</button>
+    <button class="ghost" onclick="closeModal()">Cancel</button>`); }
+function postNotice(){ const title=document.getElementById('nt').value.trim()||'Notice', body=document.getElementById('nb').value.trim()||'';
+  state.notices.unshift({id:nextId(),title,body,date:'26 May'}); notify('📢','New notice: '+title); showToast('📢','Notice published to all 20 flats',title); closeModal(); render(); }
+function showRaiseComplaint(){ openModal(`<h3>Raise a complaint</h3>
+    <label>What is the issue?</label><input id="ct" placeholder="e.g. Water leakage in basement"/>
+    <button class="primary" onclick="raiseComplaint()">Submit to committee</button>
+    <button class="ghost" onclick="closeModal()">Cancel</button>`); }
+function raiseComplaint(){ const title=document.getElementById('ct').value.trim()||'Complaint';
+  state.complaints.unshift({id:nextId(),flat:state.me,title,status:'open',date:'26 May'}); notify('🛠️','Complaint raised by '+state.me+': '+title);
+  showToast('🛠️','Complaint submitted to committee',title); closeModal(); render(); }
+function resolveComplaint(id){ const c=state.complaints.find(x=>x.id===id); if(c){c.status='resolved';notify('✅','Complaint resolved: '+c.title);showToast('✅','Marked resolved',c.title);} render(); }
+/* staff */
+function toggleStaff(id){ const s=state.staff.find(x=>x.id===id); if(!s)return;
+  if(s.status==='in'){s.status='out';s.time='—';} else {s.status='in';s.time=nowLabel();}
+  notify('🧹',s.name+' ('+s.role+') checked '+s.status); showToast('🧹',s.name+' checked '+s.status,s.role); render(); }
+/* amenity booking */
+function showBook(){
+  const opts=state.amenities.map(a=>`<option value="${a}">${a}</option>`).join('');
+  openModal(`<h3>Book an amenity</h3>
+    <label>Amenity</label><select id="am">${opts}</select>
+    <label>When</label><input id="aw" placeholder="e.g. Sat 6:00 PM"/>
+    <label>Note (optional)</label><input id="an" placeholder="e.g. Birthday"/>
+    <button class="primary" onclick="bookAmenity()">Request booking</button>
+    <button class="ghost" onclick="closeModal()">Cancel</button>`);
 }
-function postNotice(){
-  const title = document.getElementById('nt').value.trim() || 'Notice';
-  const body  = document.getElementById('nb').value.trim() || '';
-  state.notices.unshift({ id:nextId(), title, body, date:nowDate() }); closeModal(); render();
-}
-function showRaiseComplaint(){
-  openModal('<h3>Raise a complaint</h3>'
-    + '<label>What is the issue?</label><input id="ct" placeholder="e.g. Water leakage in basement"/>'
-    + '<button class="primary" onclick="raiseComplaint()">Submit to committee</button>'
-    + '<button class="ghost" onclick="closeModal()">Cancel</button>');
-}
-function raiseComplaint(){
-  const title = document.getElementById('ct').value.trim() || 'Complaint';
-  state.complaints.unshift({ id:nextId(), flat:state.me, title, status:'open', date:nowDate() });
+function bookAmenity(){ const amenity=document.getElementById('am').value, when=document.getElementById('aw').value.trim()||'TBD',
+        note=document.getElementById('an').value.trim()||'';
+  state.bookings.unshift({id:nextId(),amenity,flat:state.me,by:myName(),when,note}); notify('🎟️',state.me+' booked '+amenity+' ('+when+')');
   closeModal(); render();
-}
-function resolveComplaint(id){ const c = state.complaints.find(x=>x.id===id); if(c) c.status='resolved'; render(); }
-function showScript(){
-  openModal('<h3>90-second pitch</h3>'
-    + '<ol class="scriptlist">'
-    + '<li>Start as <b>Guard</b> → tap "New visitor" for flat A-302.</li>'
-    + '<li>Switch to <b>Resident</b> → approve them. <i>(this is the magic)</i></li>'
-    + '<li>Show the <b>bill</b> → tap Pay now.</li>'
-    + '<li>As <b>Committee</b> → collection hits 100%, post a notice.</li>'
-    + '<li>Back to <b>Resident</b> → the notice is already there. Raise a complaint.</li>'
-    + '<li><b>Committee</b> → mark it resolved. Done.</li>'
-    + '</ol><button class="primary" onclick="closeModal()">Got it</button>');
+  openModal(`<h3 style="text-align:center">Booking requested</h3><div class="tick">🎟️</div>
+    <p class="muted" style="text-align:center;margin:0"><b style="color:#fff">${esc(amenity)}</b> • ${esc(when)}</p>
+    <button class="primary" onclick="closeModal()">Done</button>`);
 }
 
-/* ============================== RENDER: resident ============================== */
+/* ====================== RESIDENT ====================== */
 function renderResident(){
-  return resHeader() + resApprovals() + resDeliveries() + resBill() + resNotices() + resComplaints();
-}
-function resHeader(){
-  return '<div class="hdr"><h2>Namaste, '+esc(myName().split(' ')[0])+' 🙏</h2>'
-    + '<div class="sub">'+state.society.name+'</div>'
-    + '<span class="flat">Flat '+state.me+'</span></div>';
-}
-function resApprovals(){
-  const pend = state.visitors.filter(v => v.flat===state.me && v.status==='pending');
-  let body;
-  if(!pend.length){
-    body = '<div class="card"><div class="empty"><span class="big">🚪</span>No one waiting at the gate.</div></div>';
-  } else {
-    body = pend.map(v => '<div class="card">'
-        + '<div class="row">'
-        + '<div class="avatar" style="background:'+v.tone+'">'+initials(v.name)+'</div>'
-        + '<div class="grow"><div class="nm">'+esc(v.name)+'</div>'
-        + '<div class="meta">'+esc(v.purpose)+' • '+v.time+'</div></div></div>'
-        + '<div class="btns">'
-        + '<button class="act approve" onclick="decideVisitor('+v.id+",'approved')\">Approve</button>"
-        + '<button class="act deny" onclick="decideVisitor('+v.id+",'denied')\">Deny</button>"
-        + '</div></div>').join('');
-  }
-  return '<div class="sec-t">At your gate</div>'+body;
-}
-function resDeliveries(){
-  const mine = state.deliveries.filter(d => d.flat===state.me && d.status==='expected');
-  const list = mine.map(d => '<div class="row" style="margin-top:10px">'
-      + '<div class="avatar" style="background:var(--accent-soft);color:var(--accent-d)">'+(d.type==='cab'?'🚕':'📦')+'</div>'
-      + '<div class="grow"><div class="nm">'+esc(d.vendor)+'</div><div class="meta">Gate code '+d.code+'</div></div>'
-      + '<span class="pill warn">Expected</span></div>').join('');
-  return '<div class="sec-t">Expecting someone?</div>'
-    + '<div class="card tight">'
-    + (list || '<div class="meta" style="margin-bottom:4px">Pre-approve a delivery or cab so the guard waves them in.</div>')
-    + '<div class="btns"><button class="act primary" onclick="showPreApprove()">＋ Pre-approve a delivery / cab</button></div>'
-    + '</div>';
-}
-function resBill(){
-  const b = myBill();
-  const right = b.status==='paid'
-    ? '<span class="pill ok">Paid ✓</span>'
-    : '<button class="act primary" style="flex:none;padding:9px 18px" onclick="showPay()">Pay now</button>';
-  return '<div class="sec-t">Maintenance</div>'
-    + '<div class="card"><div class="row">'
-    + '<div class="grow"><div class="meta">'+state.society.month+'</div>'
-    + '<div class="billamt">'+fmt(b.amount)+'</div></div>'
-    + right + '</div></div>';
-}
-function resNotices(){
-  const list = state.notices.map(n => '<div style="margin-top:11px">'
-      + '<div class="row" style="justify-content:space-between">'
-      + '<div class="nm">'+esc(n.title)+'</div><div class="meta">'+n.date+'</div></div>'
-      + (n.body?'<div class="meta" style="margin-top:2px">'+esc(n.body)+'</div>':'')
-      + '</div>').join('<div class="divline"></div>');
-  return '<div class="sec-t">Notices</div><div class="card tight">'+list+'</div>';
-}
-function resComplaints(){
-  const mine = state.complaints.filter(c => c.flat===state.me);
-  const list = mine.length ? mine.map(c => '<div class="row" style="margin-top:9px">'
-      + '<div class="grow"><div class="nm">'+esc(c.title)+'</div><div class="meta">'+c.date+'</div></div>'
-      + '<span class="pill '+(c.status==='open'?'warn':'ok')+'">'+(c.status==='open'?'Open':'Resolved')+'</span>'
-      + '</div>').join('') : '<div class="meta">No complaints raised.</div>';
-  return '<div class="sec-t">My complaints</div>'
-    + '<div class="card tight">'+list
-    + '<div class="btns"><button class="act ghost" onclick="showRaiseComplaint()">＋ Raise a complaint</button></div>'
-    + '</div>';
+  const b=myBill(), pend=state.visitors.filter(v=>v.flat===state.me&&v.status==='pending');
+  const myDel=state.deliveries.filter(d=>d.flat===state.me&&d.status==='expected');
+  const myStaff=state.staff.filter(s=>s.flats.includes(state.me));
+  const myBook=state.bookings.filter(x=>x.flat===state.me);
+  const myComp=state.complaints.filter(c=>c.flat===state.me);
+
+  let h=`<div class="hdr"><h2>Namaste, ${esc(myName().split(' ')[0])} 🙏</h2>
+    <div class="sub">${state.society.name} • 20 flats</div><span class="flat">Flat ${state.me}</span></div>`;
+
+  h+=`<div class="qa">
+    <div class="qa-btn sos" onclick="sos()"><div class="ic">🚨</div><div class="l">SOS</div></div>
+    <div class="qa-btn" onclick="callGuard()"><div class="ic">📞</div><div class="l">Call guard</div></div>
+    <div class="qa-btn" onclick="showPreApprove()"><div class="ic">📦</div><div class="l">Pre-approve</div></div>
+    <div class="qa-btn" onclick="showBook()"><div class="ic">🎟️</div><div class="l">Book</div></div>
+  </div>`;
+
+  h+=`<div class="sec-t">At your gate</div>`;
+  h+= pend.length ? pend.map(v=>`<div class="card"><div class="row">
+        <div class="avatar" style="background:${v.tone}">${initials(v.name)}</div>
+        <div class="grow"><div class="nm">${esc(v.name)}</div><div class="meta">${esc(v.purpose)} • ${v.time}</div></div></div>
+      <div class="btns"><button class="act approve" onclick="decideVisitor(${v.id},'approved')">Approve</button>
+        <button class="act deny" onclick="decideVisitor(${v.id},'denied')">Deny</button></div></div>`).join('')
+    : `<div class="card"><div class="empty"><span class="big">🚪</span>No one waiting at the gate.</div></div>`;
+
+  h+=`<div class="sec-t">Expecting someone?</div><div class="card tight">`;
+  h+= myDel.map(d=>`<div class="row" style="margin-top:8px">
+        <div class="avatar" style="background:var(--accent-soft);color:#fff">${d.type==='cab'?'🚕':'📦'}</div>
+        <div class="grow"><div class="nm">${esc(d.vendor)}</div><div class="meta">Gate code ${d.code}</div></div>
+        <span class="pill warn">Expected</span></div>`).join('') ||
+      `<div class="meta" style="margin-bottom:4px">Pre-approve a delivery or cab so the guard waves them in.</div>`;
+  h+=`<div class="btns"><button class="act primary" onclick="showPreApprove()">＋ Pre-approve a delivery / cab</button></div></div>`;
+
+  h+=`<div class="sec-t">Daily help today</div><div class="card tight">`;
+  h+= myStaff.map(s=>`<div class="row" style="margin-top:9px">
+        <div class="avatar" style="background:${randTone()}">${initials(s.name)}</div>
+        <div class="grow"><div class="nm">${esc(s.name)}</div><div class="meta">${esc(s.role)} • ${s.status==='in'?'In '+s.time:'Not arrived'}</div></div>
+        <span class="pill ${s.status==='in'?'ok':'grey'}">${s.status==='in'?'In':'Out'}</span></div>`).join('') ||
+      `<div class="meta">No help assigned to your flat.</div>`;
+  h+=`</div>`;
+
+  h+=`<div class="sec-t">Maintenance</div><div class="card"><div class="row">
+      <div class="grow"><div class="meta">${state.society.month}</div><div class="billamt">${fmt(b.amount)}</div></div>
+      ${b.status==='paid'?'<span class="pill ok">Paid ✓</span>'
+        :'<button class="act primary" style="flex:none;padding:10px 18px" onclick="showPay()">Pay now</button>'}</div></div>`;
+
+  h+=`<div class="sec-t">Amenities</div><div class="card tight">`;
+  h+= myBook.length ? myBook.map(x=>`<div class="row" style="margin-top:8px">
+        <div class="avatar" style="background:var(--cyan-soft);color:#fff">🎟️</div>
+        <div class="grow"><div class="nm">${esc(x.amenity)}</div><div class="meta">${esc(x.when)}${x.note?' • '+esc(x.note):''}</div></div>
+        <span class="pill ok">Booked</span></div>`).join('')
+      : `<div class="meta" style="margin-bottom:4px">Clubhouse, gym, party hall — book a slot.</div>`;
+  h+=`<div class="btns"><button class="act ghost" onclick="showBook()">＋ Book an amenity</button></div></div>`;
+
+  h+=`<div class="sec-t">Notices</div><div class="card tight">`+
+     state.notices.slice(0,3).map(n=>`<div style="margin-top:10px"><div class="row" style="justify-content:space-between">
+        <div class="nm">${esc(n.title)}</div><div class="meta">${n.date}</div></div>
+        ${n.body?'<div class="meta" style="margin-top:2px">'+esc(n.body)+'</div>':''}</div>`).join('<div class="divline"></div>')+`</div>`;
+
+  h+=`<div class="sec-t">My complaints</div><div class="card tight">`;
+  h+= myComp.length ? myComp.map(c=>`<div class="row" style="margin-top:8px">
+        <div class="grow"><div class="nm">${esc(c.title)}</div><div class="meta">${c.date}</div></div>
+        <span class="pill ${c.status==='open'?'warn':'ok'}">${c.status==='open'?'Open':'Resolved'}</span></div>`).join('')
+      : `<div class="meta">No complaints raised.</div>`;
+  h+=`<div class="btns"><button class="act ghost" onclick="showRaiseComplaint()">＋ Raise a complaint</button></div></div>`;
+  paint(h);
 }
 
-/* ============================== RENDER: guard ============================== */
+/* ====================== GUARD ====================== */
 function renderGuard(){
-  return '<div class="hdr"><h2>Gate — '+state.society.name+'</h2>'
-      + '<div class="sub">On duty: '+esc(state.guardName)+'</div></div>'
-    + '<button class="bigbtn" onclick="showAddVisitor()">'
-      + '<div class="ic">➕</div><div class="grow"><div class="t">New visitor</div>'
-      + '<div class="s">Log someone at the gate &amp; notify the flat</div></div><div class="chev">›</div></button>'
-    + '<button class="bigbtn" onclick="showExpected()">'
-      + '<div class="ic">📦</div><div class="grow"><div class="t">Expected today</div>'
-      + '<div class="s">'+state.deliveries.filter(d=>d.status==='expected').length+' pre-approved arrival(s)</div></div>'
-      + '<div class="chev">›</div></button>'
-    + guardLog();
+  let h=`<div class="hdr"><h2>Gate — ${state.society.name}</h2><div class="sub">On duty: ${esc(state.guardName)} • 20 flats</div></div>`;
+  h+=`<div class="qa">
+    <div class="qa-btn" onclick="showAddVisitor()"><div class="ic">➕</div><div class="l">New visitor</div></div>
+    <div class="qa-btn" onclick="showExpected()"><div class="ic">📦</div><div class="l">Expected</div></div>
+    <div class="qa-btn" onclick="callCommittee()"><div class="ic">📞</div><div class="l">Committee</div></div>
+    <div class="qa-btn sos" onclick="guardSos()"><div class="ic">🚨</div><div class="l">Alert</div></div>
+  </div>`;
+
+  if(state.alerts.length){
+    h+=`<div class="sec-t">🚨 Active SOS</div>`;
+    h+= state.alerts.map(a=>`<div class="card" style="border-color:rgba(255,107,107,.4)"><div class="row">
+        <div class="avatar" style="background:linear-gradient(135deg,#ff5c5c,#d12f4f)">🚨</div>
+        <div class="grow"><div class="nm">Emergency · ${a.by}</div><div class="meta">${esc(nameOf(a.by))} • ${a.time}</div></div></div>
+      <div class="btns"><button class="act approve" onclick="clearAlert(${a.id})">Mark handled</button>
+        <button class="act ghost" onclick="intercom('${a.by}')">Intercom ${a.by}</button></div></div>`).join('');
+  }
+
+  h+=`<div class="bigbtn" onclick="showStaff()"><div class="ic">🧹</div><div class="grow">
+      <div class="t">Daily help &amp; staff</div><div class="s">${state.staff.filter(s=>s.status==='in').length} in • ${state.staff.filter(s=>s.status==='out').length} out — tap to mark</div></div><div class="chev">›</div></div>`;
+
+  h+=`<div class="sec-t">Today's entry log</div><div class="card tight">`+
+     [...state.visitors].reverse().map(v=>{const cls=v.status==='approved'?'ok':v.status==='denied'?'bad':'grey';
+        const lbl=v.status.charAt(0).toUpperCase()+v.status.slice(1);
+        return `<div class="row" style="margin-top:10px"><div class="avatar" style="background:${v.tone}">${initials(v.name)}</div>
+          <div class="grow"><div class="nm">${esc(v.name)}</div><div class="meta">${v.flat} • ${esc(v.purpose)} • ${v.time}</div></div>
+          <span class="pill ${cls}">${lbl}</span></div>`;}).join('<div class="divline"></div>')+`</div>`;
+  paint(h);
 }
-function guardLog(){
-  const rows = [...state.visitors].reverse().map(v => {
-    const cls = v.status==='approved'?'ok':v.status==='denied'?'bad':'grey';
-    const lbl = v.status.charAt(0).toUpperCase()+v.status.slice(1);
-    return '<div class="row" style="margin-top:11px">'
-      + '<div class="avatar" style="background:'+v.tone+'">'+initials(v.name)+'</div>'
-      + '<div class="grow"><div class="nm">'+esc(v.name)+'</div>'
-      + '<div class="meta">'+v.flat+' • '+esc(v.purpose)+' • '+v.time+'</div></div>'
-      + '<span class="pill '+cls+'">'+lbl+'</span></div>';
-  }).join('<div class="divline"></div>');
-  return '<div class="sec-t">Today\'s entry log</div><div class="card tight">'+rows+'</div>';
-}
+function guardSos(){ const a={id:nextId(),by:'GATE',name:'Security',time:nowLabel()}; state.alerts.unshift(a);
+  notify('🚨','Guard raised a gate alert'); render(); showToast('🚨','Alert broadcast to all residents & committee','From the gate',true); }
 function showExpected(){
-  const exp = state.deliveries.filter(d => d.status==='expected');
-  const body = exp.length ? exp.map(d => '<div class="row" style="margin-top:11px">'
-      + '<div class="avatar" style="background:var(--accent-soft);color:var(--accent-d)">'+(d.type==='cab'?'🚕':'📦')+'</div>'
-      + '<div class="grow"><div class="nm">'+esc(d.vendor)+' → '+d.flat+'</div>'
-      + '<div class="meta">Gate code '+d.code+'</div></div>'
-      + '<button class="act approve" style="flex:none;padding:8px 13px;font-size:12.5px" '
-      + 'onclick="markArrived('+d.id+');showExpected()">Mark arrived</button></div>').join('')
-    : '<div class="empty"><span class="big">📭</span>No pre-approved arrivals right now.</div>';
-  openModal('<h3>Expected arrivals</h3>'+body+'<button class="ghost" onclick="closeModal()">Close</button>');
+  const exp=state.deliveries.filter(d=>d.status==='expected');
+  const body=exp.length?exp.map(d=>`<div class="row" style="margin-top:11px">
+      <div class="avatar" style="background:var(--accent-soft);color:#fff">${d.type==='cab'?'🚕':'📦'}</div>
+      <div class="grow"><div class="nm">${esc(d.vendor)} → ${d.flat}</div><div class="meta">Gate code ${d.code}</div></div>
+      <button class="act approve" style="flex:none;padding:9px 13px;font-size:12px" onclick="markArrived(${d.id});showExpected()">Arrived</button></div>`).join('')
+    :'<div class="empty"><span class="big">📭</span>No pre-approved arrivals right now.</div>';
+  openModal(`<h3>Expected arrivals</h3>${body}<button class="ghost" onclick="closeModal()">Close</button>`);
+}
+function showStaff(){
+  const body=state.staff.map(s=>`<div class="row" style="margin-top:11px">
+      <div class="avatar" style="background:${randTone()}">${initials(s.name)}</div>
+      <div class="grow"><div class="nm">${esc(s.name)} <span class="meta">· ${esc(s.role)}</span></div>
+        <div class="meta">${esc(s.flats)} • ${s.status==='in'?'In '+s.time:'Out'}</div></div>
+      <button class="act ${s.status==='in'?'deny':'approve'}" style="flex:none;padding:9px 13px;font-size:12px"
+        onclick="toggleStaff(${s.id});showStaff()">${s.status==='in'?'Check out':'Check in'}</button></div>`).join('');
+  openModal(`<h3>Daily help &amp; staff</h3>${body}<button class="ghost" onclick="closeModal()">Close</button>`);
 }
 
-/* ============================== RENDER: committee ============================== */
+/* ====================== COMMITTEE ====================== */
 function renderCommittee(){
-  return '<div class="hdr"><h2>Committee — '+state.society.name+'</h2>'
-      + '<div class="sub">'+state.society.flats+' flats • '+state.society.month+'</div></div>'
-    + comCollection() + comNotices() + comComplaints();
-}
-function comCollection(){
-  const paid = state.bills.filter(b=>b.status==='paid').length, total = state.bills.length;
-  const pct = Math.round(paid/total*100);
-  const got = state.bills.filter(b=>b.status==='paid').reduce((s,b)=>s+b.amount,0);
-  const exp = state.bills.reduce((s,b)=>s+b.amount,0);
-  const rows = state.bills.map(b => '<div class="row" style="margin-top:10px">'
-      + '<div class="grow"><div class="nm">'+b.flat+'</div></div>'
-      + '<div class="meta" style="margin-right:10px">'+fmt(b.amount)+'</div>'
-      + '<span class="pill '+(b.status==='paid'?'ok':'warn')+'">'+(b.status==='paid'?'Paid':'Due')+'</span></div>').join('');
-  return '<div class="sec-t">Maintenance collection</div>'
-    + '<div class="card">'
-    + '<div class="row" style="justify-content:space-between">'
-    + '<div class="nm" style="font-size:16px">'+paid+' of '+total+' flats paid</div>'
-    + '<div class="nm" style="font-size:16px;color:var(--accent-d)">'+pct+'%</div></div>'
-    + '<div class="barwrap"><div class="bar" style="width:'+pct+'%"></div></div>'
-    + '<div class="stat"><span>Collected <b>'+fmt(got)+'</b></span><span>Expected <b>'+fmt(exp)+'</b></span></div>'
-    + '<div class="divline"></div>'+rows+'</div>';
-}
-function comNotices(){
-  const list = state.notices.map(n => '<div style="margin-top:11px">'
-      + '<div class="row" style="justify-content:space-between">'
-      + '<div class="nm">'+esc(n.title)+'</div><div class="meta">'+n.date+'</div></div>'
-      + (n.body?'<div class="meta" style="margin-top:2px">'+esc(n.body)+'</div>':'')
-      + '</div>').join('<div class="divline"></div>');
-  return '<div class="sec-t">Notices <a onclick="showPostNotice()">＋ Post notice</a></div>'
-    + '<div class="card tight">'+list+'</div>';
-}
-function comComplaints(){
-  const open = state.complaints.filter(c=>c.status==='open');
-  const done = state.complaints.filter(c=>c.status==='resolved');
-  const openRows = open.length ? open.map(c => '<div class="row" style="margin-top:10px">'
-      + '<div class="grow"><div class="nm">'+esc(c.title)+'</div><div class="meta">'+c.flat+' • '+c.date+'</div></div>'
-      + '<button class="act approve" style="flex:none;padding:8px 13px;font-size:12.5px" '
-      + 'onclick="resolveComplaint('+c.id+')">Resolve</button></div>').join('')
-    : '<div class="empty" style="padding:10px"><span class="big">✅</span>No open complaints.</div>';
-  const doneRows = done.map(c => '<div class="row" style="margin-top:9px">'
-      + '<div class="grow"><div class="nm muted">'+esc(c.title)+'</div><div class="meta">'+c.flat+' • '+c.date+'</div></div>'
-      + '<span class="pill ok">Resolved</span></div>').join('');
-  return '<div class="sec-t">Open complaints ('+open.length+')</div>'
-    + '<div class="card tight">'+openRows+(doneRows?'<div class="divline"></div>'+doneRows:'')+'</div>';
+  const paid=state.bills.filter(b=>b.status==='paid').length, total=state.bills.length, pct=Math.round(paid/total*100);
+  const got=state.bills.filter(b=>b.status==='paid').reduce((s,b)=>s+b.amount,0), exp=state.bills.reduce((s,b)=>s+b.amount,0);
+  const due=state.bills.filter(b=>b.status==='due');
+  const open=state.complaints.filter(c=>c.status==='open');
+
+  let h=`<div class="hdr"><h2>Committee — ${state.society.name}</h2><div class="sub">${total} flats • ${state.society.month}</div></div>`;
+
+  h+=`<div class="qa">
+    <div class="qa-btn" onclick="showPostNotice()"><div class="ic">📢</div><div class="l">Post notice</div></div>
+    <div class="qa-btn" onclick="callGuard()"><div class="ic">📞</div><div class="l">Call gate</div></div>
+    <div class="qa-btn" onclick="showNotifs()"><div class="ic">📡</div><div class="l">Activity</div></div>
+    <div class="qa-btn" onclick="showStaff()"><div class="ic">🧹</div><div class="l">Staff</div></div>
+  </div>`;
+
+  h+=`<div class="sec-t">Maintenance collection</div><div class="card">
+      <div class="row" style="justify-content:space-between"><div class="nm" style="font-size:16px">${paid} of ${total} flats paid</div>
+        <div class="nm" style="font-size:16px;color:var(--accent-2)">${pct}%</div></div>
+      <div class="barwrap"><div class="bar" style="width:${pct}%"></div></div>
+      <div class="stat"><span>Collected <b>${fmt(got)}</b></span><span>Expected <b>${fmt(exp)}</b></span></div>
+      <div class="divline"></div>
+      <div class="meta" style="margin-bottom:2px">Pending (${due.length}):</div>
+      ${due.map(b=>`<div class="row" style="margin-top:7px"><div class="grow"><div class="nm">${b.flat} <span class="meta">· ${esc(nameOf(b.flat))}</span></div></div>
+        <span class="pill warn">${fmt(b.amount)} due</span></div>`).join('')||'<div class="meta">All clear 🎉</div>'}
+    </div>`;
+
+  if(state.alerts.length){
+    h+=`<div class="sec-t">🚨 SOS alerts</div>`+state.alerts.map(a=>`<div class="card tight" style="border-color:rgba(255,107,107,.4)">
+      <div class="row"><div class="avatar" style="background:linear-gradient(135deg,#ff5c5c,#d12f4f)">🚨</div>
+      <div class="grow"><div class="nm">${a.by} · ${esc(nameOf(a.by))}</div><div class="meta">${a.time}</div></div>
+      <button class="act approve" style="flex:none;padding:9px 13px;font-size:12px" onclick="clearAlert(${a.id})">Handled</button></div></div>`).join('');
+  }
+
+  h+=`<div class="sec-t">Open complaints (${open.length})</div><div class="card tight">`;
+  h+= open.length?open.map(c=>`<div class="row" style="margin-top:9px"><div class="grow">
+        <div class="nm">${esc(c.title)}</div><div class="meta">${c.flat} • ${c.date}</div></div>
+        <button class="act approve" style="flex:none;padding:9px 13px;font-size:12px" onclick="resolveComplaint(${c.id})">Resolve</button></div>`).join('')
+      :'<div class="empty" style="padding:10px"><span class="big">✅</span>No open complaints.</div>';
+  h+=`</div>`;
+
+  h+=`<div class="sec-t">Amenity bookings</div><div class="card tight">`+
+     state.bookings.map(x=>`<div class="row" style="margin-top:9px"><div class="avatar" style="background:var(--cyan-soft);color:#fff">🎟️</div>
+        <div class="grow"><div class="nm">${esc(x.amenity)} — ${x.flat}</div><div class="meta">${esc(x.when)}${x.note?' • '+esc(x.note):''}</div></div></div>`).join('')+`</div>`;
+
+  h+=`<div class="sec-t">Notices <a onclick="showPostNotice()">＋ Post notice</a></div><div class="card tight">`+
+     state.notices.map(n=>`<div style="margin-top:10px"><div class="row" style="justify-content:space-between">
+        <div class="nm">${esc(n.title)}</div><div class="meta">${n.date}</div></div>
+        ${n.body?'<div class="meta" style="margin-top:2px">'+esc(n.body)+'</div>':''}</div>`).join('<div class="divline"></div>')+`</div>`;
+  paint(h);
 }
 
-/* ============================== INIT ============================== */
-render();
+/* ====================== demo script ====================== */
+function showScript(){
+  openModal(`<h3>90-second pitch</h3><ol class="scriptlist">
+    <li>Watch the <b>LIVE</b> feed — events arrive on their own (toasts + 🔔 badge).</li>
+    <li>As <b>Guard</b>, tap "New visitor" for A-302.</li>
+    <li>Switch to <b>Resident</b> → approve it. <i>(live-linked)</i></li>
+    <li>Pay the <b>bill</b>; as <b>Committee</b> watch collection rise.</li>
+    <li>Hit <b>SOS</b> as a resident → see it on the Guard &amp; Committee screens.</li>
+    <li>Post a notice; mark a complaint resolved. Tap ⏸ to pause the live feed.</li>
+  </ol><button class="primary" onclick="closeModal()">Got it</button>`);
+}
+
+/* ====================== living engine ====================== */
+const DAY=[
+  ()=>{const v={id:nextId(),name:'Swiggy',flat:'B-202',purpose:'Food delivery',status:'pending',time:nowLabel(),tone:'#d6695a'};
+       state.visitors.push(v); notify('🛵','Swiggy at the gate for B-202'); showToast('🛵','Swiggy at the gate','For B-202 (Iyer Family)'); render();},
+  ()=>{const b=state.bills.find(x=>x.flat==='B-102'); if(b)b.status='paid'; notify('💳','B-102 (Joshi Family) paid maintenance');
+       showToast('💳','Maintenance paid','B-102 • '+fmt(2400)); render();},
+  ()=>{const s=state.staff.find(x=>x.id===15); if(s){s.status='in';s.time=nowLabel();} notify('🧹','Ravi (Driver) checked in');
+       showToast('🧹','Ravi checked in','Driver • A-401'); render();},
+  ()=>{const v={id:nextId(),name:'Relative (Guest)',flat:'A-201',purpose:'Guest',status:'pending',time:nowLabel(),tone:'#8c7bd6'};
+       state.visitors.push(v); notify('🚪','New guest for A-201'); showToast('🚪','Visitor at gate','Guest for A-201 (Sharma Family)'); render();},
+  ()=>{const d=state.deliveries.find(x=>x.id===7); if(d)d.status='arrived'; notify('📦','Amazon delivered to A-302');
+       showToast('📦','Amazon delivered','A-302'); render();},
+  ()=>{const c=state.complaints.find(x=>x.id===25); if(c)c.status='resolved'; notify('✅','Resolved: streetlight near B-block');
+       showToast('✅','Complaint resolved','Streetlight near B-block'); render();},
+  ()=>{const d=state.deliveries.find(x=>x.id===10); if(d)d.status='arrived'; notify('🚕','Uber arrived for B-301');
+       showToast('🚕','Cab arrived','Uber → B-301'); render();},
+  ()=>{state.notices.unshift({id:nextId(),title:'Summer evening get-together',body:'Lawn, Sat 6 PM. Snacks by the committee.',date:'26 May'});
+       notify('📢','New notice: Summer get-together'); showToast('📢','New notice posted','Summer get-together • Sat 6 PM'); render();},
+];
+let evIdx=0, evTimer=null, mode='running';
+function engineTick(){
+  simMin+=2; renderClock();
+  if(evIdx<DAY.length){ DAY[evIdx++](); }
+  else { stopEngine('done'); }
+}
+function startEngine(){ if(evTimer)return; mode='running'; setEngineBtn();
+  clockTimer=setInterval(()=>{simMin+=1;renderClock();},2500);
+  evTimer=setInterval(engineTick,6000); }
+function pauseTimers(){ clearInterval(evTimer);clearInterval(clockTimer); evTimer=null;clockTimer=null; }
+function pauseEngine(){ pauseTimers(); mode='paused'; setEngineBtn(); }
+function stopEngine(){ pauseTimers(); mode='done'; setEngineBtn(); }
+function toggleEngine(){ if(mode==='running')pauseEngine(); else if(mode==='paused')startEngine(); else replayDay(); }
+function replayDay(){ pauseTimers(); state=freshState(); simMin=9*60+14; evIdx=0; renderClock(); updateBadge(); render(); startEngine(); showToast('↻','Replaying the day','Live feed restarted'); }
+function setEngineBtn(){ const b=document.getElementById('engineBtn'), tag=document.getElementById('liveTag');
+  if(mode==='running'){b.textContent='⏸';b.title='Pause live events';tag.classList.remove('off');}
+  else if(mode==='paused'){b.textContent='▶';b.title='Resume live events';tag.classList.add('off');}
+  else {b.textContent='↻';b.title='Replay the day';tag.classList.add('off');} }
+
+/* ====================== init ====================== */
+renderClock(); updateBadge(); render(); startEngine();
 </script>
 </body>
 </html>
