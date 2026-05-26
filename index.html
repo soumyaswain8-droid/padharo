@@ -110,6 +110,63 @@
     border-radius:9px;padding:7px 2px}
   .dqa div b{display:block;font-size:14px;margin-bottom:2px}
 
+  /* ===== bespoke per-persona visuals (each section different) ===== */
+  .viz{position:relative;width:100%;min-height:440px;display:flex;align-items:center;justify-content:center}
+  .viz::before{content:"";position:absolute;width:320px;height:320px;border-radius:50%;filter:blur(75px);opacity:.45;z-index:0}
+  .vcard{position:relative;z-index:1;border-radius:22px;color:#fff;
+    background:linear-gradient(165deg,var(--d-bg1),var(--d-bg2));box-shadow:0 30px 70px rgba(30,20,70,.30),0 0 0 1px rgba(0,0,0,.04)}
+  .vlbl{font-size:9px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.45)}
+
+  /* residents — layered approval moment */
+  .viz-res::before{background:#ff8a4c;top:40px;left:30px}
+  .appr{width:288px;padding:17px;transform:rotate(-3deg)}
+  .appr .top{display:flex;align-items:center;gap:8px;margin-bottom:13px}
+  .appr .sh{width:30px;height:30px;border-radius:9px;background:rgba(255,138,76,.22);display:flex;align-items:center;justify-content:center;font-size:15px}
+  .appr .who{display:flex;align-items:center;gap:11px;margin-bottom:15px}
+  .appr .av{width:46px;height:46px;border-radius:13px;background:#6c8cd5;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 6px 16px rgba(0,0,0,.4)}
+  .appr .nm{font-weight:700;font-size:15px}.appr .mt{font-size:12px;color:rgba(255,255,255,.55)}
+  .appr .acts{display:flex;gap:9px}
+  .appr .acts div{flex:1;text-align:center;padding:12px;border-radius:12px;font-size:13px;font-weight:700}
+  .appr .ok{background:linear-gradient(135deg,#2fd996,#19b87c);box-shadow:0 8px 20px rgba(52,224,161,.4)}
+  .appr .no{background:rgba(255,107,107,.16);color:#ff9a9a}
+  .ticket{position:absolute;top:14px;right:6px;z-index:2;width:148px;padding:14px;transform:rotate(7deg);
+    background:linear-gradient(135deg,#ff8a4c,#ff6a8c)!important;box-shadow:0 18px 38px rgba(255,106,140,.45)}
+  .ticket .c{font-size:27px;font-weight:800;letter-spacing:4px;margin-top:4px}
+  .fbadge{position:absolute;bottom:24px;left:0;z-index:3;display:flex;align-items:center;gap:8px;padding:11px 15px;border-radius:30px;
+    background:rgba(16,32,26,.9);backdrop-filter:blur(10px);border:1px solid rgba(52,224,161,.4);
+    box-shadow:0 14px 32px rgba(0,0,0,.45);font-size:12.5px;font-weight:700;color:#34e0a1}
+
+  /* security — wide live gate console */
+  .viz-guard::before{background:#46e0d0;bottom:30px;right:30px}
+  .console{width:100%;max-width:480px;padding:19px}
+  .console .hd{display:flex;align-items:center;gap:9px;margin-bottom:15px}
+  .console .live{display:flex;align-items:center;gap:5px;color:#34e0a1;font-weight:800;font-size:11px;letter-spacing:.05em}
+  .console .live i{width:7px;height:7px;border-radius:50%;background:#34e0a1;box-shadow:0 0 8px #34e0a1;font-style:normal}
+  .console .gate{font-weight:700;font-size:14px}
+  .logbtn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:14px;font-weight:700;font-size:14px;
+    margin-bottom:8px;background:linear-gradient(135deg,#ff8a4c,#ff6a8c);box-shadow:0 12px 26px rgba(255,138,76,.4)}
+  .logrow{display:flex;align-items:center;gap:11px;padding:11px 0;border-top:1px solid rgba(255,255,255,.08)}
+  .logrow .av{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+  .logrow .nm{font-weight:700;font-size:13.5px}.logrow .mt{font-size:11px;color:rgba(255,255,255,.5)}
+  .logrow .dpill{margin-left:auto}
+
+  /* committee — collection dashboard */
+  .viz-com::before{background:#7a4bff;top:40px;right:40px}
+  .dash{width:100%;max-width:434px;padding:21px}
+  .dash .t{font-weight:700;font-size:14px;margin-bottom:17px;display:flex;justify-content:space-between;align-items:center}
+  .dash .main{display:flex;gap:18px;align-items:center;margin-bottom:11px}
+  .ring{width:124px;height:124px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;position:relative;
+    background:conic-gradient(#ff8a4c 0% 70%,rgba(255,255,255,.12) 70% 100%)}
+  .ring::before{content:"";position:absolute;inset:13px;border-radius:50%;background:linear-gradient(165deg,#1a1338,#241653)}
+  .ring .v{position:relative;text-align:center}
+  .ring .v b{font-size:27px;font-weight:800;display:block;line-height:1}
+  .ring .v span{font-size:10px;color:rgba(255,255,255,.55)}
+  .tiles{display:flex;flex-direction:column;gap:9px;flex:1}
+  .tile{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:11px 13px}
+  .tile b{font-size:18px;font-weight:800}.tile span{font-size:11px;color:rgba(255,255,255,.55);display:block}
+  .spark{display:flex;align-items:flex-end;gap:6px;height:48px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)}
+  .spark i{flex:1;border-radius:4px 4px 0 0;background:linear-gradient(180deg,#46e0d0,rgba(70,224,208,.25))}
+
   /* generic section */
   section{position:relative}
   .band{padding:84px 0}
@@ -295,25 +352,14 @@
       <li><span class="ck">✓</span> One SOS button that alerts the guard &amp; committee</li>
     </ul>
   </div>
-  <div class="devwrap reveal">
-    <div class="device">
-      <div class="dscreen">
-        <div class="dtabs"><div class="dtab on">Resident</div><div class="dtab">Guard</div><div class="dtab">Committee</div></div>
-        <div class="dbody">
-          <div class="dqa"><div><b>🚨</b>SOS</div><div><b>📞</b>Call</div><div><b>📦</b>Pre-approve</div><div><b>🎟️</b>Book</div></div>
-          <div class="dlbl">Daily help today</div>
-          <div class="dcard">
-            <div class="drow"><div class="dav" style="background:#5aa6a0">LA</div>
-              <div style="flex:1"><div class="dnm">Lakshmi · Maid</div><div class="dmt">In · 08:10 AM</div></div>
-              <span class="dpill dp-ok">In</span></div>
-            <div style="height:1px;background:rgba(255,255,255,.08);margin:8px 0"></div>
-            <div class="drow"><div class="dav" style="background:#d59a5a">SU</div>
-              <div style="flex:1"><div class="dnm">Suresh · Cook</div><div class="dmt">In · 07:55 AM</div></div>
-              <span class="dpill dp-ok">In</span></div>
-          </div>
-        </div>
-      </div>
+  <div class="viz viz-res reveal">
+    <div class="vcard appr">
+      <div class="top"><div class="sh">🛡️</div><div class="vlbl">A visitor at your gate</div></div>
+      <div class="who"><div class="av">RP</div><div><div class="nm">Ramesh (Plumber)</div><div class="mt">A-302 · Service · 10:42 AM</div></div></div>
+      <div class="acts"><div class="ok">Approve</div><div class="no">Deny</div></div>
     </div>
+    <div class="vcard ticket"><div class="vlbl" style="color:rgba(255,255,255,.85)">Gate code · Amazon</div><div class="c">4821</div></div>
+    <div class="fbadge">✓&nbsp; Lakshmi (maid) checked in · 08:10</div>
   </div>
 </div></div></section>
 
@@ -330,25 +376,18 @@
       <li><span class="ck">✓</span> Raise a gate alert to the whole society</li>
     </ul>
   </div>
-  <div class="devwrap reveal">
-    <div class="device">
-      <div class="dscreen">
-        <div class="dtabs"><div class="dtab">Resident</div><div class="dtab on">Guard</div><div class="dtab">Committee</div></div>
-        <div class="dbody">
-          <div class="dhead" style="background:linear-gradient(135deg,rgba(255,138,76,.92),rgba(168,90,255,.82))">
-            <h4>Gate — Green Meadows</h4><div class="s">On duty: Lakshman · 20 flats</div></div>
-          <div class="dlbl">Today's entry log</div>
-          <div class="dcard">
-            <div class="drow"><div class="dav" style="background:#cf6f9b">LT</div>
-              <div style="flex:1"><div class="dnm">Live Test</div><div class="dmt">A-302 · Guest · 11:01</div></div>
-              <span class="dpill dp-ok">Approved</span></div>
-            <div style="height:1px;background:rgba(255,255,255,.08);margin:8px 0"></div>
-            <div class="drow"><div class="dav" style="background:#6c8cd5">RP</div>
-              <div style="flex:1"><div class="dnm">Ramesh (Plumber)</div><div class="dmt">A-302 · Service · 10:42</div></div>
-              <span class="dpill dp-grey">Pending</span></div>
-          </div>
-        </div>
-      </div>
+  <div class="viz viz-guard reveal">
+    <div class="vcard console">
+      <div class="hd"><span class="live"><i></i>LIVE</span><span class="gate">Gate — Green Meadows</span>
+        <span style="margin-left:auto;font-size:11px;color:rgba(255,255,255,.45)">20 flats</span></div>
+      <div class="logbtn">＋&nbsp; Log a visitor</div>
+      <div class="vlbl" style="margin:14px 2px 2px">Today's entry log</div>
+      <div class="logrow"><div class="av" style="background:#cf6f9b">LT</div>
+        <div><div class="nm">Live Test</div><div class="mt">A-302 · Guest · 11:01</div></div><span class="dpill dp-ok">Approved</span></div>
+      <div class="logrow"><div class="av" style="background:#6c8cd5">RP</div>
+        <div><div class="nm">Ramesh (Plumber)</div><div class="mt">A-302 · Service · 10:42</div></div><span class="dpill dp-grey">Pending</span></div>
+      <div class="logrow"><div class="av" style="background:#d6695a">ZO</div>
+        <div><div class="nm">Zomato</div><div class="mt">A-102 · Food delivery · 09:40</div></div><span class="dpill dp-ok">Approved</span></div>
     </div>
   </div>
 </div></div></section>
@@ -366,21 +405,22 @@
       <li><span class="ck">✓</span> Manage amenity bookings &amp; SOS alerts</li>
     </ul>
   </div>
-  <div class="devwrap reveal">
-    <div class="device">
-      <div class="dscreen">
-        <div class="dtabs"><div class="dtab">Resident</div><div class="dtab">Guard</div><div class="dtab on">Committee</div></div>
-        <div class="dbody">
-          <div class="dhead"><h4>Committee — Green Meadows</h4><div class="s">20 flats · May 2026</div></div>
-          <div class="dlbl">Maintenance collection</div>
-          <div class="dcard">
-            <div class="drow"><div style="flex:1"><div class="dnm" style="font-size:13px">14 of 20 flats paid</div></div>
-              <div class="dnm" style="color:#46e0d0;font-size:13px">70%</div></div>
-            <div class="dbar2"><i style="width:70%"></i></div>
-            <div class="drow" style="justify-content:space-between"><span class="dmt">Collected ₹33,600</span><span class="dmt">Expected ₹48,000</span></div>
-          </div>
+  <div class="viz viz-com reveal">
+    <div class="vcard dash">
+      <div class="t"><span>Maintenance collection</span><span style="font-size:11px;color:rgba(255,255,255,.5);font-weight:600">May 2026</span></div>
+      <div class="main">
+        <div class="ring"><div class="v"><b>70%</b><span>collected</span></div></div>
+        <div class="tiles">
+          <div class="tile"><b>₹33,600</b><span>of ₹48,000 collected</span></div>
+          <div class="tile"><b>6</b><span>flats pending</span></div>
         </div>
       </div>
+      <div class="tiles" style="flex-direction:row">
+        <div class="tile" style="flex:1"><b>3</b><span>open complaints</span></div>
+        <div class="tile" style="flex:1"><b>2</b><span>amenity bookings</span></div>
+      </div>
+      <div class="vlbl" style="margin:15px 2px 0">Collections · this week</div>
+      <div class="spark"><i style="height:38%"></i><i style="height:60%"></i><i style="height:48%"></i><i style="height:80%"></i><i style="height:64%"></i><i style="height:92%"></i><i style="height:72%"></i></div>
     </div>
   </div>
 </div></div></section>
