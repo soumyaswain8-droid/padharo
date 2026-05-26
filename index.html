@@ -167,6 +167,39 @@
   .spark{display:flex;align-items:flex-end;gap:6px;height:48px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)}
   .spark i{flex:1;border-radius:4px 4px 0 0;background:linear-gradient(180deg,#46e0d0,rgba(70,224,208,.25))}
 
+  /* hero — living society scene (towers + floating notifications) */
+  .hero-scene{position:relative;width:100%;min-height:500px;display:flex;align-items:center;justify-content:center}
+  .hero-scene::before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;z-index:0;filter:blur(50px);
+    background:radial-gradient(circle,rgba(217,96,46,.30),rgba(122,75,255,.18) 55%,transparent 72%)}
+  .towers{position:relative;z-index:1;display:flex;align-items:flex-end;gap:16px;transition:transform .2s ease;
+    filter:drop-shadow(0 34px 56px rgba(40,20,80,.34))}
+  .tower{border-radius:20px 20px 7px 7px;border:1px solid rgba(255,255,255,.08);padding:14px 13px 0;
+    background:linear-gradient(168deg,#2a1c5e,#15102e);display:flex;flex-direction:column}
+  .tower.t1{width:116px;height:248px}.tower.t2{width:128px;height:310px}
+  .tower .cap{font-size:9px;font-weight:800;letter-spacing:.5px;color:rgba(255,255,255,.4);text-align:center;margin-bottom:9px}
+  .win{display:flex;flex-wrap:wrap;gap:7px;flex:1;align-content:flex-start}
+  .win span{width:calc(33.33% - 5px);height:17px;border-radius:4px;background:rgba(255,255,255,.07)}
+  .win span.lit{background:linear-gradient(180deg,#ffb27a,#ff6a8c);box-shadow:0 0 11px rgba(255,138,76,.65)}
+  .win span.lit2{background:linear-gradient(180deg,#7defe0,#2bb6a6);box-shadow:0 0 11px rgba(70,224,208,.55)}
+  .tower .door{height:30px;margin:5px -13px 0;border-radius:0 0 7px 7px;
+    background:linear-gradient(180deg,rgba(255,138,76,.35),rgba(255,138,76,.12));border-top:1px solid rgba(255,138,76,.4)}
+  .scene-live{position:absolute;top:6px;left:50%;transform:translateX(-50%);z-index:2;display:flex;align-items:center;gap:5px;
+    background:rgba(16,32,26,.9);border:1px solid rgba(52,224,161,.4);color:#34e0a1;font-size:10px;font-weight:800;
+    padding:4px 10px;border-radius:20px;letter-spacing:.05em}
+  .scene-live i{width:6px;height:6px;border-radius:50%;background:#34e0a1;box-shadow:0 0 8px #34e0a1;font-style:normal;
+    animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .fnote{position:absolute;z-index:3;background:#fff;border:1px solid var(--line);border-radius:15px;padding:11px 14px;
+    display:flex;align-items:center;gap:10px;box-shadow:0 20px 44px rgba(40,20,80,.18);animation:floaty 5.5s ease-in-out infinite}
+  .fnote .i{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:17px;flex:none}
+  .fnote .tt{font-size:12.5px;font-weight:800;color:var(--ink);line-height:1.2}
+  .fnote .dd{font-size:10.5px;color:var(--muted);margin-top:1px}
+  .fn1{top:46px;left:-6px;animation-delay:-1s}.fn1 .i{background:#e6f6ee}
+  .fn2{top:120px;right:-14px;animation-delay:-3s}.fn2 .i{background:var(--accent-soft)}
+  .fn3{bottom:54px;left:8px;animation-delay:-4.5s}.fn3 .i{background:#efe9fb}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-13px)}}
+  @media(max-width:840px){.fn1,.fn3{left:0}.fn2{right:0}}
+
   /* generic section */
   section{position:relative}
   .band{padding:84px 0}
@@ -306,25 +339,27 @@
         <div><div class="n">3-in-1</div><div class="l">resident · guard · committee</div></div>
       </div>
     </div>
-    <div class="devwrap">
-      <div class="device tilt">
-        <div class="dscreen">
-          <div class="dbar"><span class="live"><i></i>LIVE</span><span>09:42</span><span class="sp"></span><span>🔔 3</span></div>
-          <div class="dtabs"><div class="dtab on">Resident</div><div class="dtab">Guard</div><div class="dtab">Committee</div></div>
-          <div class="dbody">
-            <div class="dhead"><h4>Namaste, Soumya 🙏</h4><div class="s">Green Meadows · Flat A-302</div></div>
-            <div class="dlbl">At your gate</div>
-            <div class="dcard">
-              <div class="drow"><div class="dav" style="background:#6c8cd5">RP</div>
-                <div style="flex:1"><div class="dnm">Ramesh (Plumber)</div><div class="dmt">Service · 10:42 AM</div></div></div>
-              <div class="dbtns"><div class="db db-ok">Approve</div><div class="db db-no">Deny</div></div>
-            </div>
-            <div class="dlbl">Maintenance</div>
-            <div class="dcard"><div class="drow"><div style="flex:1"><div class="dmt">May 2026</div><div class="damt">₹2,400</div></div>
-              <div class="db db-ok" style="flex:none;padding:7px 14px">Pay now</div></div></div>
-          </div>
+    <div class="hero-scene">
+      <span class="scene-live"><i></i>GREEN MEADOWS · LIVE</span>
+      <div class="towers">
+        <div class="tower t1">
+          <div class="cap">BLOCK A</div>
+          <div class="win"><span></span><span class="lit"></span><span></span><span></span><span></span><span class="lit2"></span>
+            <span class="lit"></span><span></span><span></span><span></span><span class="lit"></span><span></span>
+            <span></span><span class="lit2"></span><span></span></div>
+          <div class="door"></div>
+        </div>
+        <div class="tower t2">
+          <div class="cap">BLOCK B</div>
+          <div class="win"><span></span><span></span><span class="lit"></span><span class="lit"></span><span></span><span></span>
+            <span></span><span class="lit2"></span><span></span><span></span><span class="lit"></span><span></span>
+            <span class="lit"></span><span></span><span></span><span></span><span></span><span class="lit2"></span></div>
+          <div class="door"></div>
         </div>
       </div>
+      <div class="fnote fn1"><div class="i">✅</div><div><div class="tt">Visitor approved</div><div class="dd">A-302 · just now</div></div></div>
+      <div class="fnote fn2"><div class="i">💳</div><div><div class="tt">₹2,400 paid</div><div class="dd">Maintenance · B-101</div></div></div>
+      <div class="fnote fn3"><div class="i">📢</div><div><div class="tt">New notice posted</div><div class="dd">Water tanker · Sat</div></div></div>
     </div>
   </div>
 </header>
@@ -549,10 +584,10 @@
   // scroll reveal
   const io = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }), {threshold:.12});
   document.querySelectorAll('.reveal').forEach((el,i)=>{ el.style.transitionDelay=(i%3)*0.07+'s'; io.observe(el); });
-  // subtle hero device parallax
-  const dev = document.querySelector('.device.tilt');
-  if(dev){ addEventListener('mousemove', e=>{ const x=e.clientX/innerWidth-.5, y=e.clientY/innerHeight-.5;
-    dev.style.transform = `rotateY(${-14+x*8}deg) rotateX(${6-y*8}deg)`; }); }
+  // subtle hero scene parallax (towers tilt toward cursor)
+  const scene = document.querySelector('.hero-scene .towers');
+  if(scene){ addEventListener('mousemove', e=>{ const x=e.clientX/innerWidth-.5, y=e.clientY/innerHeight-.5;
+    scene.style.transform = `perspective(1000px) rotateY(${x*9}deg) rotateX(${-y*5}deg)`; }); }
   // nav shadow on scroll
   addEventListener('scroll', ()=>{ document.querySelector('nav').style.boxShadow = scrollY>10 ? '0 6px 20px rgba(20,30,60,.08)' : 'none'; });
 </script>
