@@ -3,233 +3,268 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Padharo — society in your pocket</title>
-<!-- DEMO_URL: live demo hosted on GitHub Pages (soumyaswain8-droid) -->
+<title>Padharo — society management for small apartments</title>
+<!-- DEMO_URL: live demo on GitHub Pages (soumyaswain8-droid) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#221a13; --muted:#6f655b; --paper:#fbf6f0; --card:#ffffff;
-    --accent:#e07a3f; --accent-d:#c0561f; --accent-2:#f0a86a; --accent-soft:#fcefe6;
-    --dark:#1c140d; --dark2:#2c2017; --glass:rgba(255,255,255,.08);
-    --ok:#1f9d63; --line:#ece2d6; --radius:20px;
+    --display:'Fraunces',Georgia,'Times New Roman',serif;
+    --sans:'Hanken Grotesk',-apple-system,'Segoe UI',sans-serif;
+    --ink:#241b14; --body:#5e5249; --muted:#988b7e; --line:#ece3d8;
+    --bg:#fbf7f1; --bg-soft:#f4ede3; --bg-warm:#f8ede2;
+    --accent:#d9602e; --accent-d:#bd4d1f; --accent-2:#1f9c8f; --accent-soft:#f8e6d9;
+    --navy:#1d1610; --ok:#2a8d5c;
+    --shadow-sm:0 4px 20px rgba(80,50,20,.07); --shadow:0 22px 56px rgba(80,50,20,.14);
+    --radius:20px;
+    /* device (dark aurora app) tokens */
+    --d-bg1:#15102e; --d-bg2:#221651; --d-glass:rgba(255,255,255,.07); --d-brd:rgba(255,255,255,.14);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);
-    background:var(--paper);overflow-x:hidden;line-height:1.55}
+  body{font-family:var(--sans);color:var(--body);background:var(--bg);line-height:1.62;
+    -webkit-font-smoothing:antialiased;font-weight:400}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.035;mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
   a{text-decoration:none;color:inherit}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 26px}
-  .grad-txt{background:linear-gradient(100deg,var(--accent),#eea05f 60%,#d98a4e);
-    -webkit-background-clip:text;background-clip:text;color:transparent}
-
-  /* ---------- animated mesh background ---------- */
-  .mesh{position:fixed;inset:0;z-index:-2;overflow:hidden;background:var(--dark)}
-  .blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.55;mix-blend-mode:screen;
-    animation:drift 22s ease-in-out infinite}
-  .b1{width:620px;height:620px;background:#e07a3f;top:-160px;left:-120px}
-  .b2{width:560px;height:560px;background:#9a4bd6;bottom:-180px;right:-120px;animation-delay:-7s}
-  .b3{width:480px;height:480px;background:#2f7ad6;top:30%;right:18%;animation-delay:-13s;opacity:.4}
-  @keyframes drift{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(70px,50px) scale(1.12)}
-    66%{transform:translate(-50px,30px) scale(.92)}}
-  .grain{position:fixed;inset:0;z-index:-1;opacity:.05;pointer-events:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-
-  /* ---------- nav ---------- */
-  nav{position:fixed;top:0;left:0;right:0;z-index:50;backdrop-filter:blur(16px);
-    background:rgba(28,20,13,.55);border-bottom:1px solid rgba(255,255,255,.08)}
-  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
-  .brand{display:flex;align-items:center;gap:10px;color:#fff;font-weight:800;font-size:18px}
-  .brand .mk{width:34px;height:34px;border-radius:10px;background:var(--accent);display:flex;
-    align-items:center;justify-content:center;font-size:19px;box-shadow:0 6px 18px rgba(224,122,63,.5)}
-  .navlinks{display:flex;gap:26px;align-items:center}
-  .navlinks a{color:rgba(255,255,255,.78);font-size:14px;font-weight:600;transition:.2s}
-  .navlinks a:hover{color:#fff}
-  .btn{display:inline-flex;align-items:center;gap:7px;border:0;cursor:pointer;font-weight:700;
-    border-radius:30px;padding:11px 20px;font-size:14px;transition:.2s;white-space:nowrap}
-  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 8px 24px rgba(224,122,63,.4)}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+  h1,h2,h3{font-family:var(--display);font-optical-sizing:auto;font-weight:600;color:var(--ink);
+    letter-spacing:-.012em;line-height:1.06}
+  .accent{color:var(--accent-d)} .ht .accent{font-style:italic;font-weight:500}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;font-weight:700;font-size:15px;
+    border-radius:12px;padding:13px 24px;transition:.2s;white-space:nowrap;font-family:inherit}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 10px 24px rgba(232,116,59,.32)}
   .btn-primary:hover{background:var(--accent-d);transform:translateY(-2px)}
-  .btn-ghost{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)}
-  .btn-ghost:hover{background:rgba(255,255,255,.18)}
-  .btn-dark{background:var(--ink);color:#fff}.btn-dark:hover{background:#000}
-  @media(max-width:760px){.navlinks a:not(.btn){display:none}}
+  .btn-soft{background:var(--accent-soft);color:var(--accent-d)}
+  .btn-soft:hover{background:#fbe2d2}
+  .btn-line{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+  .btn-line:hover{border-color:var(--accent);color:var(--accent-d)}
+  .ey{font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-d)}
 
-  /* ---------- hero ---------- */
-  header{position:relative;color:#fff;padding:150px 0 110px;overflow:hidden}
-  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:center}
-  .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);
-    border:1px solid rgba(255,255,255,.18);padding:6px 14px;border-radius:30px;font-size:12.5px;
-    font-weight:600;color:rgba(255,255,255,.9);margin-bottom:22px}
-  .badge .dot{width:7px;height:7px;border-radius:50%;background:#5fe0a0;box-shadow:0 0 10px #5fe0a0}
-  h1.hero-t{font-size:58px;line-height:1.02;letter-spacing:-.025em;font-weight:800;margin-bottom:20px}
-  .hero-sub{font-size:19px;color:rgba(255,255,255,.82);max-width:46ch;margin-bottom:30px}
-  .hero-cta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:26px}
-  .hero-stats{display:flex;gap:30px;margin-top:8px}
-  .hs-n{font-size:24px;font-weight:800;color:#fff}
-  .hs-l{font-size:12.5px;color:rgba(255,255,255,.6)}
+  /* nav */
+  nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:66px}
+  .logo{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:600;font-size:21px;color:var(--ink)}
+  .logo .mk{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#f0975a);
+    color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 6px 16px rgba(232,116,59,.4)}
+  .nl{display:flex;align-items:center;gap:28px}
+  .nl a{font-size:14.5px;font-weight:600;color:var(--body)}.nl a:hover{color:var(--accent-d)}
+  @media(max-width:840px){.nl a:not(.btn){display:none}}
 
-  /* 3D phone stage */
-  .stage{perspective:1400px;display:flex;justify-content:center;align-items:center;min-height:540px;position:relative}
-  .phone3d{width:300px;height:610px;border-radius:42px;background:#fff;position:relative;
-    transform:rotateY(var(--ry,-16deg)) rotateX(var(--rx,7deg));transition:transform .25s ease;
-    box-shadow:0 50px 90px rgba(0,0,0,.5),0 0 0 11px #15110c,0 0 0 13px #34291d;overflow:hidden;
-    transform-style:preserve-3d}
-  .scr{position:absolute;inset:0;background:#f4f6fb;overflow:hidden}
-  .ph-notch{height:24px;background:#15110c}
-  .ph-tabs{display:flex;gap:5px;padding:9px 9px 7px;background:#fff;border-bottom:1px solid #eee}
-  .ph-tab{flex:1;text-align:center;font-size:10px;font-weight:700;padding:7px 2px;border-radius:9px;
-    background:#eef1f6;color:#5a6275}
-  .ph-tab.on{background:var(--accent);color:#fff}
-  .ph-body{padding:10px}
-  .ph-hd{background:linear-gradient(135deg,var(--accent),#eb9a5f);border-radius:14px;padding:13px;color:#fff}
-  .ph-hd h4{font-size:15px;margin-bottom:2px}.ph-hd .s{font-size:10.5px;opacity:.9}
-  .ph-hd .fl{display:inline-block;margin-top:7px;background:rgba(255,255,255,.22);padding:2px 9px;border-radius:14px;font-size:10px;font-weight:700}
-  .ph-lbl{font-size:9px;font-weight:800;letter-spacing:.5px;color:#9aa0af;text-transform:uppercase;margin:12px 4px 5px}
-  .ph-card{background:#fff;border-radius:13px;box-shadow:0 5px 16px rgba(20,30,60,.08);padding:11px}
-  .ph-row{display:flex;align-items:center;gap:9px}
-  .ph-av{width:34px;height:34px;border-radius:10px;background:#6c8cd5;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
-  .ph-nm{font-weight:700;font-size:12px}.ph-mt{font-size:10px;color:#8a8f9c}
-  .ph-btns{display:flex;gap:7px;margin-top:9px}
-  .ph-b{flex:1;text-align:center;border-radius:9px;padding:8px;font-size:11px;font-weight:700}
-  .ph-ok{background:#1f9d63;color:#fff}.ph-no{background:#fbeaea;color:#d24b4b}
-  .ph-bill{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
-  .ph-amt{font-size:21px;font-weight:800}
-  .ph-pay{background:var(--accent);color:#fff;border-radius:9px;padding:7px 14px;font-size:11px;font-weight:700}
+  /* hero */
+  .hero{position:relative;overflow:hidden;background:
+    radial-gradient(820px 460px at 78% 8%,rgba(232,116,59,.10),transparent 62%),
+    radial-gradient(680px 520px at 12% 30%,rgba(43,182,166,.08),transparent 60%),var(--bg)}
+  .hero .wrap{display:grid;grid-template-columns:1.04fr .96fr;gap:36px;align-items:center;padding:78px 24px 70px}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);
+    box-shadow:var(--shadow-sm);padding:6px 14px;border-radius:30px;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:22px}
+  .chip .d{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  h1.ht{font-size:62px;font-weight:600;margin-bottom:20px;letter-spacing:-.022em;line-height:1.02}
+  .hsub{font-size:19px;color:var(--body);max-width:44ch;margin-bottom:28px}
+  .hcta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .ministat{display:flex;gap:30px;margin-top:34px;flex-wrap:wrap}
+  .ministat .n{font-size:22px;font-weight:800;color:var(--ink)}
+  .ministat .l{font-size:13px;color:var(--muted)}
+  @media(max-width:840px){.hero .wrap{grid-template-columns:1fr}h1.ht{font-size:38px}}
 
-  /* floating parallax cards */
-  .float{position:absolute;background:rgba(255,255,255,.95);border-radius:14px;padding:11px 13px;
-    box-shadow:0 18px 40px rgba(0,0,0,.28);display:flex;align-items:center;gap:9px;
-    animation:bob 5s ease-in-out infinite}
-  .float .ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px}
-  .float .t{font-size:12px;font-weight:800;color:var(--ink);line-height:1.2}
-  .float .d{font-size:10px;color:#8a8f9c}
-  .f1{top:60px;left:-6px;animation-delay:-1s}.f1 .ic{background:#e6f5ec}
-  .f2{bottom:120px;right:-14px;animation-delay:-3s}.f2 .ic{background:var(--accent-soft)}
-  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
-  @media(max-width:900px){.hero{grid-template-columns:1fr}h1.hero-t{font-size:42px}.float{display:none}}
+  /* device (dark app mockup) */
+  .devwrap{display:flex;justify-content:center;perspective:1500px}
+  .device{width:296px;border-radius:38px;background:linear-gradient(165deg,var(--d-bg1),var(--d-bg2));
+    padding:11px;box-shadow:0 40px 80px rgba(30,20,70,.32),0 0 0 1px rgba(0,0,0,.05);position:relative;overflow:hidden}
+  .device.tilt{transform:rotateY(-14deg) rotateX(6deg)}
+  .device::before{content:"";position:absolute;width:200px;height:200px;border-radius:50%;background:#ff8a4c;
+    filter:blur(60px);opacity:.5;top:-30px;left:-20px}
+  .device::after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:#7a4bff;
+    filter:blur(60px);opacity:.45;bottom:30px;right:-20px}
+  .dscreen{position:relative;z-index:1;border-radius:28px;overflow:hidden;background:rgba(10,8,24,.35)}
+  .dbar{display:flex;align-items:center;gap:7px;padding:9px 12px;font-size:10.5px;color:#cfc9ee;
+    border-bottom:1px solid rgba(255,255,255,.08)}
+  .dbar .live{color:#34e0a1;font-weight:800;display:flex;align-items:center;gap:4px}
+  .dbar .live i{width:6px;height:6px;border-radius:50%;background:#34e0a1;box-shadow:0 0 8px #34e0a1;font-style:normal}
+  .dbar .sp{flex:1}
+  .dtabs{display:flex;gap:4px;padding:8px 9px;border-bottom:1px solid rgba(255,255,255,.07)}
+  .dtab{flex:1;text-align:center;font-size:9px;font-weight:700;padding:6px 2px;border-radius:8px;
+    background:rgba(255,255,255,.06);color:rgba(255,255,255,.6)}
+  .dtab.on{background:linear-gradient(135deg,#ff8a4c,#ff6a8c);color:#fff}
+  .dbody{padding:9px}
+  .dhead{border-radius:12px;padding:11px;color:#fff;background:linear-gradient(135deg,rgba(255,138,76,.92),rgba(168,90,255,.82))}
+  .dhead h4{font-size:13px;font-weight:800} .dhead .s{font-size:9.5px;opacity:.9}
+  .dlbl{font-size:8px;font-weight:800;letter-spacing:.6px;color:rgba(255,255,255,.42);text-transform:uppercase;margin:9px 3px 4px}
+  .dcard{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:11px;padding:9px}
+  .drow{display:flex;align-items:center;gap:8px}
+  .dav{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+  .dnm{font-size:11px;font-weight:700;color:#fff}.dmt{font-size:9px;color:rgba(255,255,255,.55)}
+  .dpill{font-size:8.5px;font-weight:700;padding:2px 8px;border-radius:12px}
+  .dp-ok{background:rgba(52,224,161,.16);color:#34e0a1}.dp-warn{background:rgba(255,194,75,.16);color:#ffc24b}
+  .dp-grey{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)}
+  .dbtns{display:flex;gap:6px;margin-top:8px}
+  .db{flex:1;text-align:center;font-size:10px;font-weight:700;padding:7px;border-radius:9px;color:#fff}
+  .db-ok{background:linear-gradient(135deg,#2fd996,#19b87c)}.db-no{background:rgba(255,107,107,.18);color:#ff9a9a}
+  .dbar2{height:7px;background:rgba(255,255,255,.12);border-radius:6px;overflow:hidden;margin:7px 0 5px}
+  .dbar2 i{display:block;height:100%;background:linear-gradient(90deg,#ff8a4c,#46e0d0);border-radius:6px}
+  .damt{font-size:18px;font-weight:800;color:#fff}
+  .dqa{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:9px}
+  .dqa div{text-align:center;font-size:8px;color:rgba(255,255,255,.7);background:rgba(255,255,255,.06);
+    border-radius:9px;padding:7px 2px}
+  .dqa div b{display:block;font-size:14px;margin-bottom:2px}
 
-  /* ---------- sections ---------- */
-  section{position:relative;background:var(--paper)}
+  /* generic section */
+  section{position:relative}
   .band{padding:84px 0}
-  .pill-strip{background:var(--dark2);color:#fff;text-align:center;padding:30px 0}
-  .pill-strip b{color:var(--accent-2)}
-  .sec-eyebrow{text-align:center;font-size:12.5px;font-weight:800;letter-spacing:.16em;
-    text-transform:uppercase;color:var(--accent-d);margin-bottom:10px}
-  .sec-h{text-align:center;font-size:38px;font-weight:800;letter-spacing:-.02em;margin-bottom:14px}
-  .sec-p{text-align:center;color:var(--muted);font-size:17px;max-width:56ch;margin:0 auto 46px}
+  .center{text-align:center}
+  .sec-h{font-size:40px;font-weight:600;margin-bottom:14px}
+  .sec-p{font-size:17.5px;color:var(--body);max-width:58ch;margin:0 auto}
 
-  .features{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-  .fcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px;
-    transition:transform .2s ease,box-shadow .2s ease;transform-style:preserve-3d;will-change:transform}
-  .fcard:hover{box-shadow:0 26px 50px rgba(120,70,30,.16)}
-  .fcard .ic{width:54px;height:54px;border-radius:15px;background:var(--accent-soft);color:var(--accent-d);
-    display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px}
-  .fcard h3{font-size:19px;margin-bottom:7px}
-  .fcard p{color:var(--muted);font-size:14.5px}
-  @media(max-width:900px){.features{grid-template-columns:1fr}}
+  /* stat band */
+  .stats{background:var(--navy);color:#fff}
+  .stats .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;padding:46px 24px;text-align:center}
+  .stats .n{font-size:34px;font-weight:800;color:#fff;letter-spacing:-.02em}
+  .stats .n span{color:var(--accent)}
+  .stats .l{font-size:13.5px;color:rgba(255,255,255,.66);margin-top:4px}
+  @media(max-width:840px){.stats .wrap{grid-template-columns:1fr 1fr}}
 
-  /* demo section */
-  .demo-band{background:linear-gradient(180deg,var(--dark) 0%,var(--dark2) 100%);color:#fff;overflow:hidden}
-  .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:46px;align-items:center}
-  .demo-grid .sec-h,.demo-grid .sec-eyebrow{text-align:left}
-  .demo-grid h2{font-size:36px;font-weight:800;letter-spacing:-.02em;margin-bottom:16px}
-  .demo-grid p.lead{color:rgba(255,255,255,.8);font-size:16.5px;margin-bottom:22px}
-  .demo-steps{list-style:none;margin:0 0 26px}
-  .demo-steps li{display:flex;gap:12px;margin-bottom:13px;font-size:15px;color:rgba(255,255,255,.9)}
-  .demo-steps .n{width:26px;height:26px;flex:none;border-radius:50%;background:var(--accent);color:#fff;
-    font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center}
-  .demo-note{font-size:13px;color:rgba(255,255,255,.6);margin-top:6px}
-  @media(max-width:900px){.demo-grid{grid-template-columns:1fr}}
+  /* persona rows */
+  .prow{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center;padding:64px 0}
+  .prow:nth-child(even) .ptext{order:2}
+  .prow .tag{display:inline-block;font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent-d);background:var(--accent-soft);padding:5px 12px;border-radius:20px;margin-bottom:16px}
+  .prow h2{font-size:34px;font-weight:600;margin-bottom:14px}
+  .prow p{font-size:16.5px;color:var(--body);margin-bottom:18px}
+  .flist{list-style:none;display:flex;flex-direction:column;gap:11px}
+  .flist li{display:flex;gap:11px;align-items:flex-start;font-size:15.5px;color:var(--ink)}
+  .flist .ck{width:24px;height:24px;border-radius:7px;background:var(--accent-soft);color:var(--accent-d);
+    display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none}
+  @media(max-width:840px){.prow{grid-template-columns:1fr;gap:28px}.prow:nth-child(even) .ptext{order:0}}
+
+  /* features grid */
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px}
+  .fcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:26px;transition:.2s}
+  .fcard:hover{box-shadow:var(--shadow);transform:translateY(-4px);border-color:transparent}
+  .fcard .ic{width:50px;height:50px;border-radius:14px;background:var(--accent-soft);color:var(--accent-d);
+    display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:15px}
+  .fcard h3{font-size:18px;margin-bottom:7px}.fcard p{font-size:14.5px;color:var(--body)}
+  @media(max-width:840px){.feat-grid{grid-template-columns:1fr}}
+
+  /* how it works */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
+  .step{text-align:center;padding:10px}
+  .step .num{width:52px;height:52px;border-radius:50%;background:var(--accent-soft);color:var(--accent-d);
+    font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+  .step h3{font-size:18px;margin-bottom:6px}.step p{font-size:14.5px;color:var(--body)}
+  @media(max-width:840px){.steps{grid-template-columns:1fr}}
+
+  /* problems band */
+  .prob-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px}
+  .prob{background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:14px;padding:22px}
+  .prob .q{font-size:15px;font-style:italic;color:var(--ink);margin-bottom:10px}
+  .prob .a{font-size:13.5px;color:var(--body)}.prob .a b{color:var(--accent-d)}
+  @media(max-width:840px){.prob-grid{grid-template-columns:1fr}}
 
   /* pricing */
-  .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;align-items:stretch}
-  .tier{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:30px;
-    display:flex;flex-direction:column;transition:transform .2s}
-  .tier:hover{transform:translateY(-6px)}
-  .tier.feat{border:2px solid var(--accent);box-shadow:0 24px 50px rgba(224,122,63,.2);position:relative}
+  .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:48px;align-items:stretch}
+  .tier{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:30px;display:flex;flex-direction:column}
+  .tier.feat{border:2px solid var(--accent);box-shadow:var(--shadow);position:relative}
   .tier.feat::before{content:'Most popular';position:absolute;top:-13px;left:50%;transform:translateX(-50%);
-    background:var(--accent);color:#fff;font-size:11px;font-weight:800;letter-spacing:.04em;padding:5px 14px;border-radius:20px}
-  .tier .nm{font-weight:800;font-size:19px}
-  .tier .amt{font-size:40px;font-weight:800;letter-spacing:-.02em;margin:10px 0 2px}
+    background:var(--accent);color:#fff;font-size:11px;font-weight:800;padding:5px 14px;border-radius:20px}
+  .tier .nm{font-weight:800;font-size:19px;color:var(--ink)}
+  .tier .amt{font-size:38px;font-weight:800;color:var(--ink);margin:10px 0 2px}
   .tier .amt small{font-size:15px;color:var(--muted);font-weight:600}
   .tier .for{color:var(--muted);font-size:13.5px;margin-bottom:18px}
-  .tier ul{list-style:none;display:flex;flex-direction:column;gap:9px;font-size:14px;color:#574d44;flex:1;margin-bottom:18px}
+  .tier ul{list-style:none;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--body);flex:1;margin-bottom:18px}
   .tier li::before{content:'✓';color:var(--ok);font-weight:800;margin-right:8px}
-  @media(max-width:900px){.tiers{grid-template-columns:1fr}}
+  @media(max-width:840px){.tiers{grid-template-columns:1fr}}
+
+  /* trust */
+  .trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:42px}
+  .trust{text-align:center;padding:18px}
+  .trust .ic{font-size:28px;margin-bottom:10px}.trust h4{font-size:15px;margin-bottom:5px}
+  .trust p{font-size:13px;color:var(--body)}
+  @media(max-width:840px){.trust-grid{grid-template-columns:1fr 1fr}}
 
   /* resources */
-  .res{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-  .rcard{display:block;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:26px;transition:transform .2s,box-shadow .2s}
-  .rcard:hover{transform:translateY(-6px);box-shadow:0 24px 46px rgba(120,70,30,.15)}
-  .rcard .ic{font-size:28px;margin-bottom:14px}
-  .rcard h3{font-size:18px;margin-bottom:6px;display:flex;align-items:center;gap:7px}
-  .rcard p{color:var(--muted);font-size:14px;margin-bottom:14px}
+  .res{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px}
+  .rcard{display:block;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:26px;transition:.2s}
+  .rcard:hover{box-shadow:var(--shadow);transform:translateY(-4px)}
+  .rcard .ic{font-size:26px;margin-bottom:13px}
+  .rcard h3{font-size:17px;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+  .rcard p{font-size:14px;color:var(--body);margin-bottom:13px}
   .rcard .go{color:var(--accent-d);font-weight:700;font-size:14px}
-  .rcard .conf{font-size:10.5px;font-weight:700;color:#b08; background:#fbeaf3;padding:2px 8px;border-radius:10px}
-  @media(max-width:900px){.res{grid-template-columns:1fr}}
+  .tagp{font-size:10.5px;font-weight:700;color:#9a5; background:#eef7e6;padding:2px 8px;border-radius:10px}
+  @media(max-width:840px){.res{grid-template-columns:1fr}}
+
+  /* CTA band */
+  .cta{background:linear-gradient(135deg,var(--accent),#f0975a);color:#fff;text-align:center}
+  .cta .wrap{padding:74px 24px}
+  .cta h2{color:#fff;font-size:42px;font-weight:600;margin-bottom:14px}
+  .cta p{font-size:18px;color:rgba(255,255,255,.92);max-width:46ch;margin:0 auto 28px}
 
   /* footer */
-  footer{background:var(--dark);color:#fff;text-align:center;padding:80px 0 40px}
-  footer h2{font-size:40px;font-weight:800;letter-spacing:-.02em;margin-bottom:16px}
-  footer .mkbig{width:64px;height:64px;border-radius:18px;background:var(--accent);display:inline-flex;
-    align-items:center;justify-content:center;font-size:34px;margin-bottom:22px;box-shadow:0 14px 34px rgba(224,122,63,.5)}
-  footer .fnote{color:rgba(255,255,255,.55);font-size:13px;margin-top:30px}
-  footer .fnote a{color:rgba(255,255,255,.8)}
+  footer{background:var(--navy);color:rgba(255,255,255,.7);padding:60px 0 34px}
+  .fgrid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:36px;margin-bottom:40px}
+  footer .logo{color:#fff;margin-bottom:12px}
+  footer .fabout{font-size:14px;color:rgba(255,255,255,.6);max-width:36ch}
+  footer h5{color:#fff;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px}
+  footer ul{list-style:none;display:flex;flex-direction:column;gap:9px;font-size:14px}
+  footer ul a:hover{color:#fff}
+  .fbar{border-top:1px solid rgba(255,255,255,.12);padding-top:22px;font-size:13px;display:flex;
+    justify-content:space-between;flex-wrap:wrap;gap:10px}
+  @media(max-width:840px){.fgrid{grid-template-columns:1fr}}
 
-  /* scroll reveal */
-  .reveal{opacity:0;transform:translateY(34px);transition:opacity .7s ease,transform .7s ease}
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
   .reveal.in{opacity:1;transform:none}
 </style>
 </head>
 <body>
-<div class="mesh"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
-<div class="grain"></div>
 
 <nav>
   <div class="wrap">
-    <a class="brand" href="#top"><span class="mk">प</span> Padharo</a>
-    <div class="navlinks">
-      <a href="#features">Features</a>
-      <a href="#demo">Live demo</a>
+    <a class="logo" href="#top"><span class="mk">प</span> Padharo</a>
+    <div class="nl">
+      <a href="#residents">Residents</a>
+      <a href="#guard">Security</a>
+      <a href="#committee">Committee</a>
       <a href="#pricing">Pricing</a>
-      <a href="#resources">Resources</a>
-      <a class="btn btn-primary" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener">Try live demo ↗</a>
+      <a class="btn btn-primary" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener">Try live demo</a>
     </div>
   </div>
 </nav>
 
-<header id="top">
-  <div class="wrap hero">
+<!-- HERO -->
+<header id="top" class="hero">
+  <div class="wrap">
     <div>
-      <div class="badge"><span class="dot"></span> Live demo available now</div>
-      <h1 class="hero-t">Your society,<br/><span class="grad-txt">in your pocket.</span></h1>
-      <p class="hero-sub">Padharo is the society app built for <b>small apartments</b> — visitor approvals, maintenance, notices and complaints. None of the township clutter. None of the enterprise price.</p>
-      <div class="hero-cta">
-        <a class="btn btn-primary" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener" style="padding:14px 26px;font-size:15px">Launch live demo ↗</a>
-        <a class="btn btn-ghost" href="#features" style="padding:14px 26px;font-size:15px">Explore features</a>
+      <div class="chip"><span class="d"></span> Live interactive demo — no sign-up</div>
+      <h1 class="ht">Society management,<br/>made for <span class="accent">small apartments.</span></h1>
+      <p class="hsub">Visitor approvals, maintenance, notices, complaints and daily help — everything a 20–80 flat society needs, in one simple app. None of the township clutter.</p>
+      <div class="hcta">
+        <a class="btn btn-primary" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener">▶ &nbsp;Launch live demo</a>
+        <a class="btn btn-line" href="#residents">See how it works</a>
       </div>
-      <div class="hero-stats">
-        <div><div class="hs-n">10&nbsp;min</div><div class="hs-l">to set up — no sales call</div></div>
-        <div><div class="hs-n">₹0</div><div class="hs-l">to start, up to 25 flats</div></div>
-        <div><div class="hs-n">4×</div><div class="hs-l">cheaper than MyGate</div></div>
+      <div class="ministat">
+        <div><div class="n">10 min</div><div class="l">to set up</div></div>
+        <div><div class="n">₹0</div><div class="l">to start</div></div>
+        <div><div class="n">0%</div><div class="l">fee on UPI</div></div>
+        <div><div class="n">3-in-1</div><div class="l">resident · guard · committee</div></div>
       </div>
     </div>
-
-    <div class="stage" id="stage">
-      <div class="float f1"><div class="ic">✅</div><div><div class="t">Visitor approved</div><div class="d">A-302 · just now</div></div></div>
-      <div class="float f2"><div class="ic">💳</div><div><div class="t">₹2,400 paid</div><div class="d">Maintenance · May</div></div></div>
-      <div class="phone3d" id="phone">
-        <div class="scr">
-          <div class="ph-notch"></div>
-          <div class="ph-tabs"><div class="ph-tab on">🏠 Resident</div><div class="ph-tab">🛡️ Guard</div><div class="ph-tab">📋 Committee</div></div>
-          <div class="ph-body">
-            <div class="ph-hd"><h4>Namaste, Soumya 🙏</h4><div class="s">Green Meadows</div><span class="fl">Flat A-302</span></div>
-            <div class="ph-lbl">At your gate</div>
-            <div class="ph-card">
-              <div class="ph-row"><div class="ph-av">RP</div><div><div class="ph-nm">Ramesh (Plumber)</div><div class="ph-mt">Service · 10:42 AM</div></div></div>
-              <div class="ph-btns"><div class="ph-b ph-ok">Approve</div><div class="ph-b ph-no">Deny</div></div>
+    <div class="devwrap">
+      <div class="device tilt">
+        <div class="dscreen">
+          <div class="dbar"><span class="live"><i></i>LIVE</span><span>09:42</span><span class="sp"></span><span>🔔 3</span></div>
+          <div class="dtabs"><div class="dtab on">Resident</div><div class="dtab">Guard</div><div class="dtab">Committee</div></div>
+          <div class="dbody">
+            <div class="dhead"><h4>Namaste, Soumya 🙏</h4><div class="s">Green Meadows · Flat A-302</div></div>
+            <div class="dlbl">At your gate</div>
+            <div class="dcard">
+              <div class="drow"><div class="dav" style="background:#6c8cd5">RP</div>
+                <div style="flex:1"><div class="dnm">Ramesh (Plumber)</div><div class="dmt">Service · 10:42 AM</div></div></div>
+              <div class="dbtns"><div class="db db-ok">Approve</div><div class="db db-no">Deny</div></div>
             </div>
-            <div class="ph-lbl">Maintenance</div>
-            <div class="ph-card"><div class="ph-bill"><div><div class="ph-mt">May 2026</div><div class="ph-amt">₹2,400</div></div><div class="ph-pay">Pay now</div></div></div>
+            <div class="dlbl">Maintenance</div>
+            <div class="dcard"><div class="drow"><div style="flex:1"><div class="dmt">May 2026</div><div class="damt">₹2,400</div></div>
+              <div class="db db-ok" style="flex:none;padding:7px 14px">Pay now</div></div></div>
           </div>
         </div>
       </div>
@@ -237,161 +272,249 @@
   </div>
 </header>
 
-<div class="pill-strip">
-  <div class="wrap">MyGate's best features. <b>None of the clutter.</b> A price a 40-flat society can actually afford.</div>
-</div>
-
-<!-- FEATURES -->
-<section id="features" class="band">
+<!-- STATS -->
+<section class="stats">
   <div class="wrap">
-    <div class="sec-eyebrow reveal">Five things, done well</div>
-    <h2 class="sec-h reveal">Everything a small society needs.</h2>
-    <p class="sec-p reveal">Not 250 features you'll never open — the handful your committee actually uses, every single day.</p>
-    <div class="features">
-      <div class="fcard reveal tilt"><div class="ic">🛡️</div><h3>Visitor approval</h3><p>The guard logs a visitor in three taps; the flat approves on their phone before anyone comes up. Works even after the guard changes — no multi-day training.</p></div>
-      <div class="fcard reveal tilt"><div class="ic">📦</div><h3>Delivery &amp; cabs</h3><p>Residents pre-approve an Amazon parcel or a cab and get a gate code. The guard just waves them in.</p></div>
-      <div class="fcard reveal tilt"><div class="ic">💳</div><h3>Maintenance</h3><p>One-tap UPI collection with a live defaulters list. Stop chasing dues on WhatsApp — the treasurer sees who's paid at a glance.</p></div>
-      <div class="fcard reveal tilt"><div class="ic">📢</div><h3>Notices</h3><p>One clean broadcast to every flat. No ads burying the water-cut notice — finally off the noisy WhatsApp group.</p></div>
-      <div class="fcard reveal tilt"><div class="ic">🛠️</div><h3>Complaints</h3><p>Residents log it, the committee resolves it, everyone sees status. The 11&nbsp;PM calls to the secretary stop.</p></div>
-      <div class="fcard reveal tilt"><div class="ic">📇</div><h3>Resident directory</h3><p>Every flat, every contact, in one place. The whole society, organised — set up in ten minutes.</p></div>
-    </div>
+    <div><div class="n">5</div><div class="l">core features — not 250</div></div>
+    <div><div class="n">20<span>–</span>80</div><div class="l">flats — the sweet spot</div></div>
+    <div><div class="n"><span>4×</span></div><div class="l">cheaper than the big apps</div></div>
+    <div><div class="n">0</div><div class="l">guard training days needed</div></div>
   </div>
 </section>
 
-<!-- LIVE DEMO -->
-<section id="demo" class="band demo-band">
-  <div class="wrap demo-grid">
-    <div class="reveal">
-      <div class="sec-eyebrow">See it for yourself</div>
-      <h2>One phone. Three people.<br/>It just works.</h2>
-      <p class="lead">Flip between the three people who run a society — Resident, Guard and Committee — on a single phone, and watch one action ripple to the next screen, live.</p>
-      <ol class="demo-steps">
-        <li><span class="n">1</span><div>As the <b>Guard</b>, log a new visitor for flat A-302.</div></li>
-        <li><span class="n">2</span><div>Switch to <b>Resident</b> — the approval is already waiting. Approve it.</div></li>
-        <li><span class="n">3</span><div>Back as <b>Guard</b> — the log now shows "Approved". That's the magic.</div></li>
-        <li><span class="n">4</span><div>Try paying a bill, posting a notice, raising a complaint — every feature is live.</div></li>
-      </ol>
-      <a class="btn btn-primary" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener" style="padding:14px 26px;font-size:15px">Launch the full demo ↗</a>
-      <div class="demo-note">Opens in a new tab · tap the “?” in the app for a 90-second guided walkthrough · mock data, no real accounts.</div>
-    </div>
-    <div class="stage" style="min-height:600px">
-      <div class="phone3d" id="phone2" style="--ry:14deg;--rx:6deg">
-        <div class="scr">
-          <div class="ph-notch"></div>
-          <div class="ph-tabs"><div class="ph-tab">🏠 Resident</div><div class="ph-tab on">🛡️ Guard</div><div class="ph-tab">📋 Committee</div></div>
-          <div class="ph-body">
-            <div class="ph-hd"><h4>Gate — Green Meadows</h4><div class="s">On duty: Lakshman</div></div>
-            <div class="ph-lbl">Today's entry log</div>
-            <div class="ph-card">
-              <div class="ph-row"><div class="ph-av" style="background:#cf6f9b">LT</div><div style="flex:1"><div class="ph-nm">Live Test</div><div class="ph-mt">A-302 · Guest · 11:01</div></div><span style="background:#e6f5ec;color:#1f9d63;font-size:10px;font-weight:700;padding:3px 9px;border-radius:14px">Approved</span></div>
-              <div style="height:1px;background:#eee;margin:10px 0"></div>
-              <div class="ph-row"><div class="ph-av">RP</div><div style="flex:1"><div class="ph-nm">Ramesh (Plumber)</div><div class="ph-mt">A-302 · Service · 10:42</div></div><span style="background:#eef1f6;color:#6b7283;font-size:10px;font-weight:700;padding:3px 9px;border-radius:14px">Pending</span></div>
-            </div>
+<!-- RESIDENTS -->
+<section class="band"><div class="wrap"><div class="prow" id="residents">
+  <div class="ptext reveal">
+    <span class="tag">For residents</span>
+    <h2>Your whole society, in your pocket.</h2>
+    <p>Approve who comes up, pay maintenance in a tap, and stop digging through three WhatsApp groups for the water-cut notice.</p>
+    <ul class="flist">
+      <li><span class="ck">✓</span> Approve or deny visitors before they reach your door</li>
+      <li><span class="ck">✓</span> Pre-approve deliveries &amp; cabs with a gate code</li>
+      <li><span class="ck">✓</span> Pay maintenance by UPI — 0% fee</li>
+      <li><span class="ck">✓</span> One SOS button that alerts the guard &amp; committee</li>
+    </ul>
+  </div>
+  <div class="devwrap reveal">
+    <div class="device">
+      <div class="dscreen">
+        <div class="dtabs"><div class="dtab on">Resident</div><div class="dtab">Guard</div><div class="dtab">Committee</div></div>
+        <div class="dbody">
+          <div class="dqa"><div><b>🚨</b>SOS</div><div><b>📞</b>Call</div><div><b>📦</b>Pre-approve</div><div><b>🎟️</b>Book</div></div>
+          <div class="dlbl">Daily help today</div>
+          <div class="dcard">
+            <div class="drow"><div class="dav" style="background:#5aa6a0">LA</div>
+              <div style="flex:1"><div class="dnm">Lakshmi · Maid</div><div class="dmt">In · 08:10 AM</div></div>
+              <span class="dpill dp-ok">In</span></div>
+            <div style="height:1px;background:rgba(255,255,255,.08);margin:8px 0"></div>
+            <div class="drow"><div class="dav" style="background:#d59a5a">SU</div>
+              <div style="flex:1"><div class="dnm">Suresh · Cook</div><div class="dmt">In · 07:55 AM</div></div>
+              <span class="dpill dp-ok">In</span></div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</section>
+</div></div></section>
+
+<!-- GUARD -->
+<section class="band" style="background:var(--bg-soft)"><div class="wrap"><div class="prow" id="guard">
+  <div class="ptext reveal">
+    <span class="tag">For security guards</span>
+    <h2>Simple enough for any guard, on day one.</h2>
+    <p>Three taps to log a visitor and ping the flat. No four-day training course — which is the #1 reason the big apps fail at the gate.</p>
+    <ul class="flist">
+      <li><span class="ck">✓</span> Log a visitor &amp; notify the resident instantly</li>
+      <li><span class="ck">✓</span> See pre-approved deliveries and gate codes</li>
+      <li><span class="ck">✓</span> Mark daily help &amp; staff in/out</li>
+      <li><span class="ck">✓</span> Raise a gate alert to the whole society</li>
+    </ul>
+  </div>
+  <div class="devwrap reveal">
+    <div class="device">
+      <div class="dscreen">
+        <div class="dtabs"><div class="dtab">Resident</div><div class="dtab on">Guard</div><div class="dtab">Committee</div></div>
+        <div class="dbody">
+          <div class="dhead" style="background:linear-gradient(135deg,rgba(255,138,76,.92),rgba(168,90,255,.82))">
+            <h4>Gate — Green Meadows</h4><div class="s">On duty: Lakshman · 20 flats</div></div>
+          <div class="dlbl">Today's entry log</div>
+          <div class="dcard">
+            <div class="drow"><div class="dav" style="background:#cf6f9b">LT</div>
+              <div style="flex:1"><div class="dnm">Live Test</div><div class="dmt">A-302 · Guest · 11:01</div></div>
+              <span class="dpill dp-ok">Approved</span></div>
+            <div style="height:1px;background:rgba(255,255,255,.08);margin:8px 0"></div>
+            <div class="drow"><div class="dav" style="background:#6c8cd5">RP</div>
+              <div style="flex:1"><div class="dnm">Ramesh (Plumber)</div><div class="dmt">A-302 · Service · 10:42</div></div>
+              <span class="dpill dp-grey">Pending</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></div></section>
+
+<!-- COMMITTEE -->
+<section class="band"><div class="wrap"><div class="prow" id="committee">
+  <div class="ptext reveal">
+    <span class="tag">For the committee</span>
+    <h2>Run the society without running yourself ragged.</h2>
+    <p>See maintenance collection at a glance, post a notice to all 20 flats, and close complaints — all from your phone, as a volunteer with a day job.</p>
+    <ul class="flist">
+      <li><span class="ck">✓</span> Live maintenance collection &amp; defaulters list</li>
+      <li><span class="ck">✓</span> Post notices to every flat — no ads burying them</li>
+      <li><span class="ck">✓</span> Track &amp; resolve complaints with a paper trail</li>
+      <li><span class="ck">✓</span> Manage amenity bookings &amp; SOS alerts</li>
+    </ul>
+  </div>
+  <div class="devwrap reveal">
+    <div class="device">
+      <div class="dscreen">
+        <div class="dtabs"><div class="dtab">Resident</div><div class="dtab">Guard</div><div class="dtab on">Committee</div></div>
+        <div class="dbody">
+          <div class="dhead"><h4>Committee — Green Meadows</h4><div class="s">20 flats · May 2026</div></div>
+          <div class="dlbl">Maintenance collection</div>
+          <div class="dcard">
+            <div class="drow"><div style="flex:1"><div class="dnm" style="font-size:13px">14 of 20 flats paid</div></div>
+              <div class="dnm" style="color:#46e0d0;font-size:13px">70%</div></div>
+            <div class="dbar2"><i style="width:70%"></i></div>
+            <div class="drow" style="justify-content:space-between"><span class="dmt">Collected ₹33,600</span><span class="dmt">Expected ₹48,000</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></div></section>
+
+<!-- FEATURES -->
+<section class="band" style="background:var(--bg-soft)"><div class="wrap center">
+  <div class="ey reveal">Everything you need</div>
+  <h2 class="sec-h reveal">Five features, done well.</h2>
+  <p class="sec-p reveal">The handful a small society actually uses every day — nothing you'll never open.</p>
+  <div class="feat-grid">
+    <div class="fcard reveal"><div class="ic">🛡️</div><h3>Visitor approval</h3><p>Guard logs a visitor; the flat approves on their phone before anyone comes up.</p></div>
+    <div class="fcard reveal"><div class="ic">📦</div><h3>Delivery &amp; cabs</h3><p>Pre-approve Amazon, Swiggy or a cab with a gate code. The guard just waves them in.</p></div>
+    <div class="fcard reveal"><div class="ic">💳</div><h3>Maintenance</h3><p>One-tap UPI collection with a live defaulters list. Stop chasing dues on WhatsApp.</p></div>
+    <div class="fcard reveal"><div class="ic">📢</div><h3>Notices &amp; complaints</h3><p>One clean broadcast to every flat, and a complaint trail the committee can close.</p></div>
+    <div class="fcard reveal"><div class="ic">🧹</div><h3>Daily help &amp; staff</h3><p>Maids, cooks and drivers check in and out at the gate, with live timings.</p></div>
+    <div class="fcard reveal"><div class="ic">🎟️</div><h3>Amenities &amp; SOS</h3><p>Book the clubhouse or gym, and a panic button that alerts the gate instantly.</p></div>
+  </div>
+</div></section>
+
+<!-- HOW IT WORKS -->
+<section class="band"><div class="wrap center">
+  <div class="ey reveal">Switching is a weekend, not a project</div>
+  <h2 class="sec-h reveal">Live in three steps.</h2>
+  <div class="steps">
+    <div class="step reveal"><div class="num">1</div><h3>Add your flats</h3><p>Import a list or type in your 20–80 flats and the committee. Ten minutes, no field visit.</p></div>
+    <div class="step reveal"><div class="num">2</div><h3>Invite residents</h3><p>Share one link. Residents are on in a tap — no app-store hunt, no training.</p></div>
+    <div class="step reveal"><div class="num">3</div><h3>Show the guard once</h3><p>Three buttons at the gate. That's the whole guard onboarding. Done.</p></div>
+  </div>
+</div></section>
+
+<!-- PROBLEMS WE FIX -->
+<section class="band" style="background:var(--bg-warm)"><div class="wrap center">
+  <div class="ey reveal">Why committees switch</div>
+  <h2 class="sec-h reveal">Built to fix what the big apps get wrong.</h2>
+  <p class="sec-p reveal">The real complaints small societies have about MyGate-class apps — and how Padharo answers them.</p>
+  <div class="prob-grid">
+    <div class="prob reveal"><div class="q">"Our guard was never trained to use the app."</div>
+      <div class="a">Padharo's guard screen is <b>three taps</b> — usable on day one, even after the agency swaps the guard.</div></div>
+    <div class="prob reveal"><div class="q">"Notices get buried under ads, so we're back on WhatsApp."</div>
+      <div class="a">Padharo has <b>no ads</b>. One clean notice to every flat — the channel residents actually read.</div></div>
+    <div class="prob reveal"><div class="q">"We pay ₹18,000+ a year for features we never use."</div>
+      <div class="a">A flat <b>₹499/month</b> for the five things you need — and a free tier under 25 flats.</div></div>
+  </div>
+</div></section>
 
 <!-- PRICING -->
-<section id="pricing" class="band">
-  <div class="wrap">
-    <div class="sec-eyebrow reveal">Flat pricing, not per-flat</div>
-    <h2 class="sec-h reveal">One simple price.<br/>The treasurer can approve it alone.</h2>
-    <p class="sec-p reveal">0% fee on UPI collection · no setup fee · no lock-in · export your data anytime.</p>
-    <div class="tiers">
-      <div class="tier reveal">
-        <div class="nm">Free</div><div class="amt">₹0<small> forever</small></div>
-        <div class="for">Up to 25 flats</div>
-        <ul><li>Maintenance + UPI collection</li><li>Notice board</li><li>Resident directory</li></ul>
-        <a class="btn btn-dark" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener" style="justify-content:center">Start free ↗</a>
-      </div>
-      <div class="tier feat reveal">
-        <div class="nm">Basic</div><div class="amt">₹499<small>/month</small></div>
-        <div class="for">20–60 flats · the sweet spot</div>
-        <ul><li>Everything in Free</li><li>Visitor approval + guard app</li><li>Complaints &amp; tracking</li><li>Reports &amp; reminders</li></ul>
-        <a class="btn btn-primary" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener" style="justify-content:center">Try it live ↗</a>
-      </div>
-      <div class="tier reveal">
-        <div class="nm">Pro</div><div class="amt">₹999<small>/month</small></div>
-        <div class="for">40–80 flats</div>
-        <ul><li>Everything in Basic</li><li>Accounting audit trail</li><li>Priority WhatsApp support</li></ul>
-        <a class="btn btn-dark" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener" style="justify-content:center">Try it live ↗</a>
-      </div>
-    </div>
+<section class="band" id="pricing"><div class="wrap center">
+  <div class="ey reveal">Flat pricing, not per-flat</div>
+  <h2 class="sec-h reveal">One simple price.</h2>
+  <p class="sec-p reveal">0% fee on UPI collection · no setup fee · no lock-in · export your data anytime.</p>
+  <div class="tiers">
+    <div class="tier reveal"><div class="nm">Free</div><div class="amt">₹0<small> forever</small></div><div class="for">Up to 25 flats</div>
+      <ul><li>Maintenance + UPI collection</li><li>Notice board</li><li>Resident directory</li></ul>
+      <a class="btn btn-line" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener" style="justify-content:center">Start free</a></div>
+    <div class="tier feat reveal"><div class="nm">Basic</div><div class="amt">₹499<small>/month</small></div><div class="for">20–60 flats · the sweet spot</div>
+      <ul><li>Everything in Free</li><li>Visitor approval + guard app</li><li>Complaints &amp; daily help</li><li>Reports &amp; reminders</li></ul>
+      <a class="btn btn-primary" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener" style="justify-content:center">Try it live</a></div>
+    <div class="tier reveal"><div class="nm">Pro</div><div class="amt">₹999<small>/month</small></div><div class="for">40–80 flats</div>
+      <ul><li>Everything in Basic</li><li>Accounting audit trail</li><li>Amenity booking</li><li>Priority WhatsApp support</li></ul>
+      <a class="btn btn-line" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener" style="justify-content:center">Try it live</a></div>
   </div>
-</section>
+</div></section>
+
+<!-- TRUST -->
+<section class="band" style="background:var(--bg-soft)"><div class="wrap center">
+  <div class="ey reveal">Your data, your society</div>
+  <h2 class="sec-h reveal">Built on trust, not ads.</h2>
+  <div class="trust-grid">
+    <div class="trust reveal"><div class="ic">🚫</div><h4>No ads, ever</h4><p>Notices stay clean. We don't sell your residents' attention.</p></div>
+    <div class="trust reveal"><div class="ic">🔓</div><h4>No lock-in</h4><p>Export your data anytime. No annual contract holding you hostage.</p></div>
+    <div class="trust reveal"><div class="ic">💳</div><h4>0% on UPI</h4><p>Genuinely zero fee on UPI maintenance collection.</p></div>
+    <div class="trust reveal"><div class="ic">🇮🇳</div><h4>Made in India</h4><p>Built for Indian societies, by Surya AI — software for owners, not specialists.</p></div>
+  </div>
+</div></section>
 
 <!-- RESOURCES -->
-<section id="resources" class="band" style="background:var(--accent-soft)">
-  <div class="wrap">
-    <div class="sec-eyebrow reveal">Dig deeper</div>
-    <h2 class="sec-h reveal">Resources</h2>
-    <p class="sec-p reveal">The live product, the committee pitch, and the market thinking behind Padharo.</p>
-    <div class="res">
-      <a class="rcard reveal" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener">
-        <div class="ic">📱</div><h3>Live demo</h3>
-        <p>The real app — three personas, all features, live-linked. Try it on your phone.</p>
-        <span class="go">Launch demo ↗</span>
-      </a>
-      <a class="rcard reveal" href="padharo-pitch-deck.html" target="_blank" rel="noopener">
-        <div class="ic">📊</div><h3>Pitch deck</h3>
-        <p>The committee-facing story: the pain, the simplicity, the price, the switch.</p>
-        <span class="go">Open deck →</span>
-      </a>
-      <a class="rcard reveal" href="mailto:soumya@suryaai.co.in?subject=Padharo%20market%20analysis%20request">
-        <div class="ic">📑</div><h3>Market &amp; competitor analysis <span class="conf">Private</span></h3>
-        <p>Deep-dive: market sizing, competitor landscape, positioning, pricing and GTM.</p>
-        <span class="go">Available on request →</span>
-      </a>
-    </div>
+<section class="band"><div class="wrap center">
+  <div class="ey reveal">Dig deeper</div>
+  <h2 class="sec-h reveal">Resources</h2>
+  <div class="res">
+    <a class="rcard reveal" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener">
+      <div class="ic">📱</div><h3>Live demo</h3>
+      <p>The real app — three personas, all features, live-linked. Try it on your phone.</p>
+      <span class="go">Launch demo →</span></a>
+    <a class="rcard reveal" href="padharo-pitch-deck.html" target="_blank" rel="noopener">
+      <div class="ic">📊</div><h3>Pitch deck</h3>
+      <p>The committee-facing story: the pain, the simplicity, the price, the switch.</p>
+      <span class="go">Open deck →</span></a>
+    <a class="rcard reveal" href="mailto:soumya@suryaai.co.in?subject=Padharo%20market%20analysis%20request">
+      <div class="ic">📑</div><h3>Market analysis <span class="tagp">Private</span></h3>
+      <p>Deep-dive on market sizing, competitors, positioning and pricing.</p>
+      <span class="go">Available on request →</span></a>
   </div>
-</section>
+</div></section>
+
+<!-- CTA -->
+<section class="cta"><div class="wrap">
+  <h2>Welcome your society into Padharo.</h2>
+  <p>See the whole thing working in 90 seconds — one phone, three people, all live.</p>
+  <a class="btn" style="background:#fff;color:var(--accent-d)" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener">▶ &nbsp;Launch live demo</a>
+</div></section>
 
 <footer>
   <div class="wrap">
-    <div class="mkbig">प</div>
-    <h2>Welcome your society into Padharo.</h2>
-    <p style="color:rgba(255,255,255,.8);font-size:17px;max-width:48ch;margin:0 auto 26px">A simpler society app, built for small apartments — software made for owners, not specialists.</p>
-    <a class="btn btn-primary" href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener" style="padding:14px 30px;font-size:15px">Launch live demo ↗</a>
-    <div class="fnote">पधारो — "please, come in" · a <b>Surya&nbsp;AI</b> product · <a href="mailto:soumya@suryaai.co.in">soumya@suryaai.co.in</a></div>
+    <div class="fgrid">
+      <div>
+        <div class="logo"><span class="mk">प</span> Padharo</div>
+        <p class="fabout">पधारो — "please, come in." A simpler society app for small apartment societies. Software made for owners, not specialists.</p>
+      </div>
+      <div><h5>Product</h5><ul>
+        <li><a href="#residents">For residents</a></li><li><a href="#guard">For security</a></li>
+        <li><a href="#committee">For committee</a></li><li><a href="#pricing">Pricing</a></li>
+        <li><a href="https://soumyaswain8-droid.github.io/padharo/demo/" target="_blank" rel="noopener">Live demo</a></li>
+      </ul></div>
+      <div><h5>Company</h5><ul>
+        <li><a href="mailto:soumya@suryaai.co.in">Contact</a></li>
+        <li><a href="padharo-pitch-deck.html" target="_blank" rel="noopener">Pitch deck</a></li>
+        <li>A Surya AI product</li>
+      </ul></div>
+    </div>
+    <div class="fbar"><span>© 2026 Surya AI · Padharo</span><span>soumya@suryaai.co.in</span></div>
   </div>
 </footer>
 
 <script>
-  // mouse parallax tilt on hero phone
-  const stage = document.getElementById('stage');
-  const phone = document.getElementById('phone');
-  if (stage && phone){
-    stage.addEventListener('mousemove', e => {
-      const r = stage.getBoundingClientRect();
-      const x = (e.clientX - r.left) / r.width - .5;
-      const y = (e.clientY - r.top) / r.height - .5;
-      phone.style.setProperty('--ry', (-16 + x*18) + 'deg');
-      phone.style.setProperty('--rx', (7 - y*14) + 'deg');
-    });
-    stage.addEventListener('mouseleave', () => {
-      phone.style.setProperty('--ry','-16deg'); phone.style.setProperty('--rx','7deg');
-    });
-  }
-  // 3D tilt on feature cards
-  document.querySelectorAll('.tilt').forEach(card => {
-    card.addEventListener('mousemove', e => {
-      const r = card.getBoundingClientRect();
-      const x = (e.clientX - r.left)/r.width - .5, y = (e.clientY - r.top)/r.height - .5;
-      card.style.transform = `perspective(700px) rotateY(${x*9}deg) rotateX(${-y*9}deg) translateY(-4px)`;
-    });
-    card.addEventListener('mouseleave', () => card.style.transform = '');
-  });
   // scroll reveal
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(en => { if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target);} });
-  }, { threshold: .12 });
-  document.querySelectorAll('.reveal').forEach((el,i) => {
-    el.style.transitionDelay = (i % 3) * 0.08 + 's';
-    io.observe(el);
-  });
+  const io = new IntersectionObserver(es => es.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }), {threshold:.12});
+  document.querySelectorAll('.reveal').forEach((el,i)=>{ el.style.transitionDelay=(i%3)*0.07+'s'; io.observe(el); });
+  // subtle hero device parallax
+  const dev = document.querySelector('.device.tilt');
+  if(dev){ addEventListener('mousemove', e=>{ const x=e.clientX/innerWidth-.5, y=e.clientY/innerHeight-.5;
+    dev.style.transform = `rotateY(${-14+x*8}deg) rotateX(${6-y*8}deg)`; }); }
+  // nav shadow on scroll
+  addEventListener('scroll', ()=>{ document.querySelector('nav').style.boxShadow = scrollY>10 ? '0 6px 20px rgba(20,30,60,.08)' : 'none'; });
 </script>
 </body>
 </html>
