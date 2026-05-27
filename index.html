@@ -243,6 +243,22 @@
   .cta .bg img{width:100%;height:100%;object-fit:cover}
   .cta .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(189,77,31,.93),rgba(38,18,52,.88))}
 
+  /* ===== Rajasthani welcome motifs (subtle, background) ===== */
+  .ey{display:inline-flex;align-items:center;gap:13px}
+  .ey::before,.ey::after{content:"";width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--accent-d))}
+  .ey::after{background:linear-gradient(90deg,var(--accent-d),transparent)}
+  .raj{position:relative;overflow:hidden}
+  .raj::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.045;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='118' height='142' viewBox='0 0 118 142'%3E%3Cg fill='none' stroke='%23bd4d1f' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M24 140 L24 66 Q24 26 59 16 Q94 26 94 66 L94 140'/%3E%3Cpath d='M34 68 Q59 38 84 68'/%3E%3Cpath d='M43 68 Q59 50 75 68'/%3E%3Ccircle cx='59' cy='12' r='2.6'/%3E%3C/g%3E%3C/svg%3E");
+    background-size:120px 144px}
+  .raj > *{position:relative;z-index:1}
+  .raj-guard{position:absolute;z-index:0;pointer-events:none;color:var(--accent-d);opacity:.12;
+    width:300px;bottom:-6px;left:1%}
+  .raj-guard svg{width:100%;height:auto;display:block}
+  .raj-guard .cap{position:absolute;bottom:18px;left:0;width:280px;text-align:center;font-family:var(--display);
+    font-style:italic;font-size:15px;color:var(--accent-d);opacity:.5}
+  @media(max-width:840px){.raj-guard{display:none}}
+
   /* generic section */
   section{position:relative}
   .band{padding:84px 0}
@@ -351,6 +367,28 @@
 </head>
 <body>
 
+<!-- Rajasthani welcome motif: a turbaned doorman with folded hands (namaste) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="rajGuard" viewBox="0 0 200 380">
+<g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M58 88 C58 32 142 32 142 88"/><path d="M52 88 Q100 106 148 88"/>
+  <path d="M66 84 Q100 58 134 84"/><path d="M74 74 Q100 52 126 74"/>
+  <path d="M118 50 L128 26 L136 52"/><path d="M142 86 Q162 100 152 128"/>
+  <path d="M70 92 Q70 152 100 158 Q130 152 130 92"/>
+  <path d="M82 116 q9 -6 18 0"/><path d="M100 116 q9 -6 18 0"/><path d="M100 120 L100 134"/>
+  <path d="M100 138 C84 140 74 134 70 124"/><path d="M100 138 C116 140 126 134 130 124"/>
+  <path d="M70 124 q-5 -6 2 -9"/><path d="M130 124 q5 -6 -2 -9"/>
+  <path d="M88 158 L88 170"/><path d="M112 158 L112 170"/>
+  <path d="M88 170 Q58 178 54 212 L46 332 Q48 346 64 346"/>
+  <path d="M112 170 Q142 178 146 212 L154 332 Q152 346 136 346"/>
+  <path d="M64 346 Q100 358 136 346"/><path d="M100 178 L100 300"/><path d="M88 170 Q100 184 112 170"/>
+  <path d="M56 234 Q100 252 144 234"/><path d="M144 234 q12 4 7 17 q-9 2 -11 -7"/>
+  <path d="M148 248 L152 300"/><path d="M154 248 L159 296"/>
+  <path d="M100 240 L86 198 Q98 184 100 184 Q102 184 114 198 L100 240"/>
+  <path d="M100 188 L100 236"/><path d="M86 240 Q100 246 114 240"/>
+  <path d="M72 346 L68 362 Q62 364 60 358"/><path d="M120 346 L124 362 Q130 364 132 358"/>
+</g></symbol></defs></svg>
+
 <nav>
   <div class="wrap">
     <a class="logo" href="#top"><span class="mk">प</span> Padharo</a>
@@ -423,7 +461,9 @@
 </div></div></section>
 
 <!-- GUARD -->
-<section class="band" style="background:var(--bg-soft)"><div class="wrap"><div class="prow" id="guard">
+<section class="band" style="background:var(--bg-soft);position:relative;overflow:hidden">
+  <div class="raj-guard"><svg viewBox="0 0 200 380"><use href="#rajGuard"/></svg></div>
+  <div class="wrap"><div class="prow" id="guard">
   <div class="ptext reveal">
     <span class="tag">For security guards</span>
     <h2>Simple enough for any guard, on day one.</h2>
@@ -485,7 +525,7 @@
 </div></div></section>
 
 <!-- AMENITIES GALLERY -->
-<section class="band" style="background:var(--bg-warm)"><div class="wrap center">
+<section class="band raj" style="background:var(--bg-warm)"><div class="wrap center">
   <div class="ey reveal">Life at the society</div>
   <h2 class="sec-h reveal">More than an app — a place to belong.</h2>
   <p class="sec-p reveal">From the grand gate to the garden, Padharo quietly runs the everyday so your community can enjoy the rest.</p>
@@ -502,7 +542,7 @@
 </div></section>
 
 <!-- FEATURES -->
-<section class="band" style="background:var(--bg-soft)"><div class="wrap center">
+<section class="band raj" style="background:var(--bg-soft)"><div class="wrap center">
   <div class="ey reveal">Everything you need</div>
   <h2 class="sec-h reveal">Five features, done well.</h2>
   <p class="sec-p reveal">The handful a small society actually uses every day — nothing you'll never open.</p>
@@ -517,7 +557,7 @@
 </div></section>
 
 <!-- HOW IT WORKS -->
-<section class="band"><div class="wrap center">
+<section class="band raj"><div class="wrap center">
   <div class="ey reveal">Switching is a weekend, not a project</div>
   <h2 class="sec-h reveal">Live in three steps.</h2>
   <div class="steps">
@@ -528,7 +568,7 @@
 </div></section>
 
 <!-- PROBLEMS WE FIX -->
-<section class="band" style="background:var(--bg-warm)"><div class="wrap center">
+<section class="band raj" style="background:var(--bg-warm)"><div class="wrap center">
   <div class="ey reveal">Why committees switch</div>
   <h2 class="sec-h reveal">Built to fix what the big apps get wrong.</h2>
   <p class="sec-p reveal">The real complaints small societies have about MyGate-class apps — and how Padharo answers them.</p>
@@ -561,7 +601,7 @@
 </div></section>
 
 <!-- TRUST -->
-<section class="band" style="background:var(--bg-soft)"><div class="wrap center">
+<section class="band raj" style="background:var(--bg-soft)"><div class="wrap center">
   <div class="ey reveal">Your data, your society</div>
   <h2 class="sec-h reveal">Built on trust, not ads.</h2>
   <div class="trust-grid">
@@ -573,7 +613,7 @@
 </div></section>
 
 <!-- RESOURCES -->
-<section class="band"><div class="wrap center">
+<section class="band raj"><div class="wrap center">
   <div class="ey reveal">Dig deeper</div>
   <h2 class="sec-h reveal">Resources</h2>
   <div class="res">
