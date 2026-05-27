@@ -54,20 +54,31 @@
   @media(max-width:840px){.nl a:not(.btn){display:none}}
 
   /* hero */
-  .hero{position:relative;overflow:hidden;background:
-    radial-gradient(820px 460px at 78% 8%,rgba(232,116,59,.10),transparent 62%),
-    radial-gradient(680px 520px at 12% 30%,rgba(43,182,166,.08),transparent 60%),var(--bg)}
-  .hero .wrap{display:grid;grid-template-columns:1.04fr .96fr;gap:36px;align-items:center;padding:78px 24px 70px}
-  .chip{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);
-    box-shadow:var(--shadow-sm);padding:6px 14px;border-radius:30px;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:22px}
-  .chip .d{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
-  h1.ht{font-size:62px;font-weight:600;margin-bottom:20px;letter-spacing:-.022em;line-height:1.02}
-  .hsub{font-size:19px;color:var(--body);max-width:44ch;margin-bottom:28px}
+  /* full-bleed photo hero */
+  .hero{position:relative;overflow:hidden;min-height:90vh;display:flex;align-items:center}
+  .hero-bg{position:absolute;inset:0;z-index:0}
+  .hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center 42%}
+  .hero-bg::after{content:"";position:absolute;inset:0;background:
+    linear-gradient(99deg,rgba(26,16,9,.88) 0%,rgba(26,16,9,.64) 34%,rgba(26,16,9,.24) 60%,rgba(26,16,9,.04) 100%),
+    linear-gradient(0deg,rgba(26,16,9,.4),transparent 32%)}
+  .hero .wrap{position:relative;z-index:1;padding:96px 24px}
+  .hero-copy{max-width:640px}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.14);backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.28);padding:7px 15px;border-radius:30px;font-size:13px;font-weight:700;color:#fff;margin-bottom:24px}
+  .chip .d{width:8px;height:8px;border-radius:50%;background:#4ce0a0;box-shadow:0 0 8px #4ce0a0}
+  h1.ht{font-size:64px;font-weight:600;margin-bottom:20px;letter-spacing:-.022em;line-height:1.01;color:#fff;
+    text-shadow:0 2px 30px rgba(0,0,0,.35)}
+  .ht .accent{color:#ff9a5c}
+  .hsub{font-size:19.5px;color:rgba(255,255,255,.92);max-width:46ch;margin-bottom:30px;text-shadow:0 1px 14px rgba(0,0,0,.3)}
   .hcta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-  .ministat{display:flex;gap:30px;margin-top:34px;flex-wrap:wrap}
-  .ministat .n{font-size:22px;font-weight:800;color:var(--ink)}
-  .ministat .l{font-size:13px;color:var(--muted)}
-  @media(max-width:840px){.hero .wrap{grid-template-columns:1fr}h1.ht{font-size:38px}}
+  .hero .btn-line{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.4);backdrop-filter:blur(8px)}
+  .hero .btn-line:hover{background:rgba(255,255,255,.24);color:#fff;border-color:#fff}
+  .ministat{display:flex;gap:34px;margin-top:36px;flex-wrap:wrap}
+  .ministat .n{font-size:23px;font-weight:800;color:#fff}
+  .ministat .l{font-size:13px;color:rgba(255,255,255,.72)}
+  .hero .hp-badge{top:92px;right:34px}
+  .hero .hp-note{top:auto;left:auto;bottom:64px;right:40px}
+  @media(max-width:840px){h1.ht{font-size:40px}.hero{min-height:auto}.hero .hp-note,.hero .hp-badge{display:none}}
 
   /* device (dark app mockup) */
   .devwrap{display:flex;justify-content:center;perspective:1500px}
@@ -355,8 +366,9 @@
 
 <!-- HERO -->
 <header id="top" class="hero">
+  <div class="hero-bg"><img src="assets/hero-villa.jpg" alt="Grand villa society entrance with ornate gate" loading="eager"/></div>
   <div class="wrap">
-    <div>
+    <div class="hero-copy">
       <div class="chip"><span class="d"></span> Live interactive demo — no sign-up</div>
       <h1 class="ht">Society management,<br/>made for <span class="accent">small apartments.</span></h1>
       <p class="hsub">Visitor approvals, maintenance, notices, complaints and daily help — everything a 20–80 flat society needs, in one simple app. None of the township clutter.</p>
@@ -371,15 +383,9 @@
         <div><div class="n">3-in-1</div><div class="l">resident · guard · committee</div></div>
       </div>
     </div>
-    <div class="hero-photo">
-      <div class="hp-frame">
-        <img src="https://images.pexels.com/photos/16553829/pexels-photo-16553829.jpeg?auto=compress&cs=tinysrgb&w=1000"
-             alt="A grand welcoming society entrance arch" loading="eager"/>
-      </div>
-      <span class="hp-badge"><i></i>Green Meadows · welcome home</span>
-      <div class="hp-note"><div class="i">✅</div><div><div class="tt">Visitor approved</div><div class="dd">A-302 · just now</div></div></div>
-    </div>
   </div>
+  <span class="hp-badge"><i></i>Green Meadows · welcome home</span>
+  <div class="hp-note"><div class="i">✅</div><div><div class="tt">Visitor approved</div><div class="dd">A-302 · just now</div></div></div>
 </header>
 
 <!-- STATS -->
