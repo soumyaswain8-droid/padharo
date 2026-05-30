@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#160e2b"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Padharo"/>
 <title>Padharo — society in your pocket</title>
 <!--
   Padharo — पधारो ("please, come in")  ·  Living demo (Aurora Glass)
@@ -188,6 +193,20 @@
   @keyframes rise{from{transform:translateY(100%)}to{transform:translateY(0)}}
   @keyframes fade{from{opacity:0}to{opacity:1}}
   .foot{text-align:center;font-size:11px;color:var(--faint);margin-top:15px}
+
+  /* ===== mobile: become a real app (full-screen, chromeless, safe-area aware) ===== */
+  @media (max-width: 640px){
+    html,body{height:100%;overflow:hidden;background:#15102e}
+    body{padding:0;margin:0}
+    .brand,.foot{display:none}
+    .phone{width:100vw;max-width:100vw;height:100vh;height:100dvh;max-height:none;border-radius:0;
+      box-shadow:none;background:linear-gradient(165deg,#15102e,#1b1440 55%,#221651)}
+    .notch{height:env(safe-area-inset-top,0);background:transparent}
+    .statusbar{padding-top:max(8px,env(safe-area-inset-top,8px))}
+    #screen{padding-bottom:max(26px,env(safe-area-inset-bottom,26px))}
+    .overlay{padding-bottom:env(safe-area-inset-bottom,0)}
+    .toasts{top:calc(env(safe-area-inset-top,0) + 96px)}
+  }
 </style>
 </head>
 <body>
@@ -221,17 +240,15 @@
     <div class="aurora"><span></span><span></span><span></span></div>
     <div class="notch"></div>
     <div class="statusbar">
-      <span class="live" id="liveTag"><span class="dot"></span>LIVE</span>
       <span class="clock" id="clock">09:14</span>
       <span class="sp"></span>
-      <button class="iconbtn" onclick="showNotifs()">🔔<span class="badge" id="badge"></span></button>
-      <button class="iconbtn" id="engineBtn" onclick="toggleEngine()" title="Pause live events">⏸</button>
+      <button class="iconbtn" onclick="showNotifs()" aria-label="Notifications">🔔<span class="badge" id="badge"></span></button>
+      <button class="iconbtn" onclick="showScript()" aria-label="How to demo" title="How to demo">?</button>
     </div>
     <div class="switcher">
       <button data-p="resident"  onclick="setPersona('resident')"><span class="ic">🏠</span>Resident</button>
       <button data-p="guard"     onclick="setPersona('guard')"><span class="ic">🛡️</span>Guard</button>
       <button data-p="committee" onclick="setPersona('committee')"><span class="ic">📋</span>Committee</button>
-      <button class="help" onclick="showScript()" title="How to demo">?</button>
     </div>
     <div class="toasts" id="toasts"></div>
     <div id="screen" class="screen"></div>
@@ -315,11 +332,17 @@ const initials = s=>s.replace(/[^A-Za-z ]/g,'').trim().split(' ').map(w=>w[0]).s
 const randTone = ()=>TONES[Math.floor(Math.random()*TONES.length)];
 
 /* ====================== clock (simulated morning) ====================== */
-let simMin = 9*60+14, clockTimer=null;
-function renderClock(){ const h=Math.floor(simMin/60)%24, m=simMin%60;
-  document.getElementById('clock').textContent = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); }
-function nowLabel(){ const h12=((Math.floor(simMin/60)+11)%12)+1, m=simMin%60, ap=Math.floor(simMin/60)%24<12?'AM':'PM';
-  return h12+':'+String(m).padStart(2,'0')+' '+ap; }
+/* real device clock — updates the status-bar time every 30s */
+function renderClock(){
+  const d=new Date(), h=d.getHours(), m=d.getMinutes();
+  document.getElementById('clock').textContent = String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+}
+function nowLabel(){
+  const d=new Date(), h=d.getHours(), m=d.getMinutes();
+  const h12=((h+11)%12)+1, ap=h<12?'AM':'PM';
+  return h12+':'+String(m).padStart(2,'0')+' '+ap;
+}
+setInterval(renderClock, 30000);
 
 /* ====================== toasts + notifications ====================== */
 function showToast(icon,text,sub,alert){
@@ -642,56 +665,19 @@ function renderCommittee(){
 
 /* ====================== demo script ====================== */
 function showScript(){
-  openModal(`<h3>90-second pitch</h3><ol class="scriptlist">
-    <li>Watch the <b>LIVE</b> feed — events arrive on their own (toasts + 🔔 badge).</li>
-    <li>As <b>Guard</b>, tap "New visitor" for A-302.</li>
-    <li>Switch to <b>Resident</b> → approve it. <i>(live-linked)</i></li>
-    <li>Pay the <b>bill</b>; as <b>Committee</b> watch collection rise.</li>
-    <li>Hit <b>SOS</b> as a resident → see it on the Guard &amp; Committee screens.</li>
-    <li>Post a notice; mark a complaint resolved. Tap ⏸ to pause the live feed.</li>
-  </ol><button class="primary" onclick="closeModal()">Got it</button>`);
+  openModal(`<h3>90-second walkthrough</h3><ol class="scriptlist">
+    <li>As <b>Guard</b>, tap "New visitor" → log someone for flat A-302.</li>
+    <li>Switch to <b>Resident</b> → the approval is waiting. Tap <b>Approve</b>. <i>(live-linked across screens)</i></li>
+    <li>Tap <b>Pay now</b> on the maintenance card.</li>
+    <li>Switch to <b>Committee</b> → watch collection % go up.</li>
+    <li>Back as <b>Resident</b> → hit <b>SOS</b>; see it appear on the Guard &amp; Committee screens.</li>
+    <li>Post a notice. Resolve a complaint. Book an amenity. Every tap is real.</li>
+  </ol><p class="muted" style="font-size:12px;margin-top:8px">Mock data, all changes live in your browser. No real accounts.</p>
+  <button class="primary" onclick="closeModal()">Got it</button>`);
 }
-
-/* ====================== living engine ====================== */
-const DAY=[
-  ()=>{const v={id:nextId(),name:'Swiggy',flat:'B-202',purpose:'Food delivery',status:'pending',time:nowLabel(),tone:'#d6695a'};
-       state.visitors.push(v); notify('🛵','Swiggy at the gate for B-202'); showToast('🛵','Swiggy at the gate','For B-202 (Iyer Family)'); render();},
-  ()=>{const b=state.bills.find(x=>x.flat==='B-102'); if(b)b.status='paid'; notify('💳','B-102 (Joshi Family) paid maintenance');
-       showToast('💳','Maintenance paid','B-102 • '+fmt(2400)); render();},
-  ()=>{const s=state.staff.find(x=>x.id===15); if(s){s.status='in';s.time=nowLabel();} notify('🧹','Ravi (Driver) checked in');
-       showToast('🧹','Ravi checked in','Driver • A-401'); render();},
-  ()=>{const v={id:nextId(),name:'Relative (Guest)',flat:'A-201',purpose:'Guest',status:'pending',time:nowLabel(),tone:'#8c7bd6'};
-       state.visitors.push(v); notify('🚪','New guest for A-201'); showToast('🚪','Visitor at gate','Guest for A-201 (Sharma Family)'); render();},
-  ()=>{const d=state.deliveries.find(x=>x.id===7); if(d)d.status='arrived'; notify('📦','Amazon delivered to A-302');
-       showToast('📦','Amazon delivered','A-302'); render();},
-  ()=>{const c=state.complaints.find(x=>x.id===25); if(c)c.status='resolved'; notify('✅','Resolved: streetlight near B-block');
-       showToast('✅','Complaint resolved','Streetlight near B-block'); render();},
-  ()=>{const d=state.deliveries.find(x=>x.id===10); if(d)d.status='arrived'; notify('🚕','Uber arrived for B-301');
-       showToast('🚕','Cab arrived','Uber → B-301'); render();},
-  ()=>{state.notices.unshift({id:nextId(),title:'Summer evening get-together',body:'Lawn, Sat 6 PM. Snacks by the committee.',date:'26 May'});
-       notify('📢','New notice: Summer get-together'); showToast('📢','New notice posted','Summer get-together • Sat 6 PM'); render();},
-];
-let evIdx=0, evTimer=null, mode='running';
-function engineTick(){
-  simMin+=2; renderClock();
-  if(evIdx<DAY.length){ DAY[evIdx++](); }
-  else { stopEngine('done'); }
-}
-function startEngine(){ if(evTimer)return; mode='running'; setEngineBtn();
-  clockTimer=setInterval(()=>{simMin+=1;renderClock();},2500);
-  evTimer=setInterval(engineTick,6000); }
-function pauseTimers(){ clearInterval(evTimer);clearInterval(clockTimer); evTimer=null;clockTimer=null; }
-function pauseEngine(){ pauseTimers(); mode='paused'; setEngineBtn(); }
-function stopEngine(){ pauseTimers(); mode='done'; setEngineBtn(); }
-function toggleEngine(){ if(mode==='running')pauseEngine(); else if(mode==='paused')startEngine(); else replayDay(); }
-function replayDay(){ pauseTimers(); state=freshState(); simMin=9*60+14; evIdx=0; renderClock(); updateBadge(); render(); startEngine(); showToast('↻','Replaying the day','Live feed restarted'); }
-function setEngineBtn(){ const b=document.getElementById('engineBtn'), tag=document.getElementById('liveTag');
-  if(mode==='running'){b.textContent='⏸';b.title='Pause live events';tag.classList.remove('off');}
-  else if(mode==='paused'){b.textContent='▶';b.title='Resume live events';tag.classList.add('off');}
-  else {b.textContent='↻';b.title='Replay the day';tag.classList.add('off');} }
 
 /* ====================== init ====================== */
-renderClock(); updateBadge(); render(); startEngine();
+renderClock(); updateBadge(); render();
 </script>
 </body>
 </html>
